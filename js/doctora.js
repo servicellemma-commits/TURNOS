@@ -176,7 +176,17 @@ const A = {
   entrar: async () => {
     S.err = '';
     try { await signInWithPopup(auth, new GoogleAuthProvider()); }
-    catch (e) { if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') signInWithRedirect(auth, new GoogleAuthProvider()); else if (e.code !== 'auth/popup-closed-by-user') { S.err = 'No se pudo entrar. Probá de nuevo.'; render(); } }
+    catch (e) {
+      console.error(e);
+      const c = e.code || '';
+      if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment' || c === 'auth/web-storage-unsupported') { signInWithRedirect(auth, new GoogleAuthProvider()); return; }
+      if (c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') return;
+      S.err = c === 'auth/unauthorized-domain' ? 'Falta autorizar este sitio en Firebase (Authentication → Configuración → Dominios autorizados).'
+        : c === 'auth/operation-not-allowed' ? 'El acceso con Google no está activado en Firebase.'
+        : c === 'auth/network-request-failed' ? 'Sin conexión. Revisá internet y probá de nuevo.'
+        : 'No se pudo entrar (' + (c || 'error desconocido') + '). Si lo abriste desde otra app, probá en Chrome.';
+      render();
+    }
   },
   salir: () => signOut(auth),
   crear: async () => {
