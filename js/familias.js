@@ -2,7 +2,7 @@
 import { configurado, auth, db, onAuthStateChanged, signInAnonymously, RecaptchaVerifier, linkWithPhoneNumber,
   doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js';
 import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js';
-import { fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
+import { textoUrgencia, fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
   slotsFor, inicios, primerLibre, tramo, textoHorarios, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js';
 
 const app = document.getElementById('app');
@@ -76,8 +76,8 @@ const V = {
       <button class="btn link" data-a="ir" data-p="hijo">+ Agregar otro hijo o hija</button>`;
     } else if (act === 'motivo') {
       c = `<h2>¿Por qué lo traés?</h2>
-      <div class="tiles">${(P.motivos || []).map(m => `<button class="tile${r.motivo === m ? ' sel' : ''}" data-a="motivo" data-m="${esc(m)}" aria-pressed="${r.motivo === m}">${icono(m)}${esc(m)}</button>`).join('')}</div>
-      <p class="alerta" role="note">Si tiene fiebre alta, le cuesta respirar o es urgente, no esperes al turno: ${P.telefono ? `llamá al <span class="wa">${esc(P.telefono)}</span> o ` : ''}andá a la guardia.</p>`;
+      <div class="tiles">${(P.motivos || []).map(m => `<button class="tile${r.motivo === m ? ' sel' : ''}" data-a="motivo" data-m="${esc(m)}" aria-pressed="${r.motivo === m}">${icono(m, P)}${esc(m)}</button>`).join('')}</div>
+      ${textoUrgencia(P) ? `<p class="alerta" role="note">${esc(textoUrgencia(P))}</p>` : ''}`;
     } else if (act === 'dia') {
       const pl = primerLibre(P, n, ocupado), dias = proximos(14).filter(k => inicios(P, k, n, ocupado).length), hs = r.fecha ? inicios(P, r.fecha, n, ocupado) : [];
       const grupo = (ti, l) => l.length ? `<p class="franja">${ti}</p><div class="slots">${l.map(h => `<button class="chip${r.hora === h ? ' sel' : ''}" data-a="hora" data-h="${h}" aria-pressed="${r.hora === h}">${fmtHora(h, P)}</button>`).join('')}</div>` : '';

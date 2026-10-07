@@ -173,3 +173,15 @@ textarea{min-height:90px;resize:vertical}
 .recs .btn.link{color:var(--warn);font-weight:700;padding:0}
 .recs .btn.sm{background:var(--surface);color:var(--fg)}
 .cartel{font-size:14px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--fg);border-radius:10px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+
+/* Editor de motivos con íconos */
+.motlist{display:flex;flex-direction:column;gap:8px}
+.motrow{display:grid;grid-template-columns:44px minmax(0,1fr) auto auto auto;gap:6px;align-items:center}
+.motrow input{padding:8px 10px}
+.motico{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--accent);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.motico.sel{background:color-mix(in srgb,var(--accent) 14%,var(--surface));border-width:2px}
+.motico svg,.galeria svg{width:24px;height:24px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.galeria{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:8px;border:1px dashed var(--line);border-radius:12px}
+.galeria button{aspect-ratio:1;border:1px solid var(--line);border-radius:10px;background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.galeria button.sel{border:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
+.btn:disabled{opacity:.4;cursor:default}

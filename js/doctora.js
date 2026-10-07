@@ -5,10 +5,11 @@ import { ADMINS, PLATAFORMA } from './firebase-config.js';
 import { abrirRecorte } from './recorte.js';
 import { esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
+  ICONOS, iconoSvg, iconoAuto, urgenciaDefecto, textoUrgencia,
   fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js';
 
 const app = document.getElementById('app');
-const S = { user: null, cargando: true, slug: null, P: null, turnos: [], pacx: {}, tab: 'agenda', dia: ahora().HOY, dar: {}, ficha: null, copia: null, sec: 'apariencia', err: '', confirmar: null, buscar: '', hor: null, blq: null, afect: null };
+const S = { user: null, cargando: true, slug: null, P: null, turnos: [], pacx: {}, tab: 'agenda', dia: ahora().HOY, dar: {}, ficha: null, copia: null, sec: 'apariencia', err: '', confirmar: null, buscar: '', hor: null, blq: null, afect: null, mot: null, motSel: null };
 const esAdmin = () => S.user && ADMINS.map(a => a.toLowerCase()).includes((S.user.email || '').toLowerCase());
 const errHtml = () => S.err ? `<p class="err" role="alert">${esc(S.err)}</p>` : '';
 const top = () => window.scrollTo(0, 0);
@@ -152,12 +153,22 @@ const PRO = {
       <label for="c-aviso">Aviso en tu página</label><textarea id="c-aviso" style="min-height:80px">${esc(P.aviso)}</textarea>
       <label for="c-ext">Obra social que saca turno por su propio sistema</label><select id="c-ext"><option value="">Ninguna</option>${(P.obras || []).map(o => `<option${P.obraExterna === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>
       <p class="small muted">Si una familia elige esa obra social, la página le avisa y no la deja reservar.</p>
+      <label for="c-urg">Mensaje de urgencias (se ve al elegir el motivo)</label><textarea id="c-urg" style="min-height:80px">${esc(textoUrgencia(P))}</textarea>
+      <div class="row between"><p class="small muted">Si lo dejás vacío, no se muestra.</p><button class="btn sm" data-a="urgOriginal">Texto original</button></div>
       <button class="btn pri block" data-a="guardarAvisos">Guardar</button>`;
-    else c = `<h3>Turnos</h3>
+    else { const m = borradorMot(), cambio = JSON.stringify(m) !== JSON.stringify(motivosDe(P));
+      c = `<h3>Motivos de consulta</h3><p class="small muted">Tocá el ícono para cambiarlo. Así lo ven las familias al sacar turno.</p>
+      <div class="motlist">${m.map((x, i) => `<div class="motrow"><button class="motico${S.motSel === i ? ' sel' : ''}" data-a="motIcono" data-i="${i}" aria-label="Cambiar ícono de ${esc(x.n)}">${iconoSvg(x.i)}</button>
+        <input id="mot-${i}" value="${esc(x.n)}" aria-label="Nombre del motivo">
+        <button class="btn sm" data-a="motMover" data-i="${i}" data-d="-1" aria-label="Subir" ${i === 0 ? 'disabled' : ''}>↑</button><button class="btn sm" data-a="motMover" data-i="${i}" data-d="1" aria-label="Bajar" ${i === m.length - 1 ? 'disabled' : ''}>↓</button><button class="btn sm danger" data-a="motBorrar" data-i="${i}" aria-label="Borrar ${esc(x.n)}">✕</button></div>
+        ${S.motSel === i ? `<div class="galeria">${Object.entries(ICONOS).map(([k, v]) => `<button class="${x.i === k ? 'sel' : ''}" data-a="motElegir" data-k="${k}" title="${v[0]}" aria-label="${v[0]}">${iconoSvg(k)}</button>`).join('')}</div>` : ''}`).join('')}</div>
+      <div class="row"><input id="mot-nuevo" class="grow" placeholder="Nuevo motivo, por ejemplo Dolor de oído"><button class="btn" data-a="motAgregar">+ Agregar</button></div>
+      ${errHtml()}<button class="btn pri block" data-a="guardarMotivos">${cambio ? 'Guardar motivos' : 'Motivos guardados'}</button>
+      ${cambio ? `<button class="btn link" data-a="descartarMotivos">Descartar cambios</button>` : ''}</div>
+      <div class="card"><h3>Obras sociales y límites</h3>
       <label for="c-obras">Obras sociales (una por línea)</label><textarea id="c-obras">${esc((P.obras || []).join('\n'))}</textarea>
-      <label for="c-mot">Motivos de consulta (uno por línea)</label><textarea id="c-mot">${esc((P.motivos || []).join('\n'))}</textarea>
       <label for="c-lim">Turnos pendientes por chico</label><select id="c-lim">${[1, 2, 3].map(n => `<option value="${n}"${P.limite === n ? ' selected' : ''}>${n}</option>`).join('')}</select>
-      <button class="btn pri block" data-a="guardarTurnos">Guardar</button>`;
+      <button class="btn pri block" data-a="guardarTurnos">Guardar</button>`; }
     if (S.sec === 'horarios') return `<div class="card"><h2>Configuración</h2><div class="secs">${secs.map(([k, l]) => `<button class="chip${S.sec === k ? ' sel' : ''}" data-a="sec" data-s="${k}">${l}</button>`).join('')}</div></div>${PRO.horarios()}`;
     return `<div class="card"><h2>Configuración</h2><div class="secs">${secs.map(([k, l]) => `<button class="chip${S.sec === k ? ' sel' : ''}" data-a="sec" data-s="${k}">${l}</button>`).join('')}</div></div><div class="card">${c}</div>`;
   }
@@ -194,6 +205,9 @@ function render() {
   if (foco !== null) { const b = document.getElementById('buscar'); if (b) { b.focus(); try { b.setSelectionRange(foco, foco); } catch (_) {} } }
 }
 const val = id => (document.getElementById(id)?.value || '').trim();
+const motivosDe = P => (P.motivos || []).map(n => ({ n, i: (P.motivosIcono && P.motivosIcono[n]) || iconoAuto(n) }));
+function borradorMot() { if (!S.mot) S.mot = motivosDe(S.P); return S.mot; }
+function leerMot() { if (!S.mot) return; S.mot.forEach((x, i) => { const el = document.getElementById('mot-' + i); if (el) x.n = el.value.trim(); }); }
 function borradorHor() { if (!S.hor) S.hor = { h: JSON.parse(JSON.stringify(S.P.horarios)), dur: S.P.duracion }; return S.hor; }
 function leerBlq() { const b = S.blq; if (!b || !document.getElementById('b-desde')) return; b.desde = val('b-desde'); b.hasta = val('b-hasta'); if (document.getElementById('b-otro')) b.otro = val('b-otro'); }
 function borradorDar() { const d = S.dar; if (document.getElementById('d-nom')) { d.nombre = val('d-nom'); d.dni = soloNum(val('d-dni')); d.tel = val('d-tel'); d.motivo = val('d-mot'); d.obra = val('d-obra'); } }
@@ -327,15 +341,27 @@ const A = {
     S.blq = null; render(); top();
   },
   desbloquear: d => guardarP({ bloqueos: (S.P.bloqueos || []).filter((b, i) => i !== Number(d.i)) }, 'Días desbloqueados'),
-  sec: d => { S.sec = d.s; S.hor = null; S.err = ''; render(); },
+  sec: d => { S.sec = d.s; S.hor = null; S.mot = null; S.motSel = null; S.err = ''; render(); },
   tema: d => guardarP({ tema: d.t, colorPropio: '' }, 'Tema ' + TEMAS[d.t].nombre + ' aplicado'),
   colorTema: () => guardarP({ colorPropio: '' }),
   quitarLogo: () => guardarP({ logo: '' }, 'Logo quitado'),
   ajustarLogo: () => recortar(S.P.logo),
   formaLogo: d => guardarP({ logoForma: d.f }, d.f === 'cuadrado' ? 'Logo cuadrado' : 'Logo redondo'),
   guardarInfo: () => guardarP({ nombre: val('c-nom') || S.P.nombre, especialidad: val('c-esp'), lugar: val('c-lug'), direccion: val('c-dir'), telefono: val('c-tel') }, 'Cambios guardados'),
-  guardarAvisos: () => guardarP({ aviso: val('c-aviso'), obraExterna: val('c-ext') }, 'Avisos guardados'),
-  guardarTurnos: () => { const lines = id => (document.getElementById(id).value || '').split('\n').map(s => s.trim()).filter(Boolean); guardarP({ obras: lines('c-obras'), motivos: lines('c-mot'), limite: Number(val('c-lim')) || 1 }, 'Cambios guardados'); }
+  guardarAvisos: () => guardarP({ aviso: val('c-aviso'), obraExterna: val('c-ext'), urgencia: (document.getElementById('c-urg')?.value || '').trim() }, 'Avisos guardados'),
+  urgOriginal: () => { const t = document.getElementById('c-urg'); if (t) t.value = urgenciaDefecto(S.P); toast('Tocá Guardar para aplicarlo'); },
+  guardarTurnos: () => { leerMot(); const lines = id => (document.getElementById(id).value || '').split('\n').map(s => s.trim()).filter(Boolean); guardarP({ obras: lines('c-obras'), limite: Number(val('c-lim')) || 1 }, 'Cambios guardados'); },
+  motIcono: d => { leerMot(); S.motSel = S.motSel === Number(d.i) ? null : Number(d.i); render(); },
+  motElegir: d => { leerMot(); if (S.motSel !== null) S.mot[S.motSel].i = d.k; S.motSel = null; render(); },
+  motMover: d => { leerMot(); const i = Number(d.i), j = i + Number(d.d), m = S.mot; if (j < 0 || j >= m.length) return; [m[i], m[j]] = [m[j], m[i]]; S.motSel = null; render(); },
+  motBorrar: d => { leerMot(); S.mot.splice(Number(d.i), 1); S.motSel = null; render(); },
+  motAgregar: () => { leerMot(); const n = val('mot-nuevo'); if (!n) { S.err = 'Escribí el nombre del motivo.'; return render(); } if (S.mot.some(x => x.n.toLowerCase() === n.toLowerCase())) { S.err = 'Ese motivo ya está.'; return render(); } S.err = ''; S.mot.push({ n, i: iconoAuto(n) }); S.motSel = S.mot.length - 1; render(); },
+  descartarMotivos: () => { S.mot = null; S.motSel = null; S.err = ''; render(); },
+  guardarMotivos: async () => {
+    leerMot(); const m = S.mot.filter(x => x.n);
+    if (!m.length) { S.err = 'Tiene que quedar al menos un motivo.'; return render(); }
+    S.err = ''; await guardarP({ motivos: m.map(x => x.n), motivosIcono: Object.fromEntries(m.map(x => [x.n, x.i])) }, 'Motivos guardados'); S.mot = null; S.motSel = null; render();
+  }
 };
 
 document.addEventListener('click', e => { const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const fn = A[el.dataset.a]; if (fn) { e.preventDefault(); fn(el.dataset); } });

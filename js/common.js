@@ -119,14 +119,46 @@ export const deco = P => P.dibujos ? decoSvg(P.tema) : '';
 export function logoHtml(P, sm) { return P.logo ? `<img class="logo${sm ? ' sm' : ''}${P.logoForma === 'cuadrado' ? ' cuadrado' : ''}" src="${esc(P.logo)}" alt="Logo de ${esc(P.nombre)}">` : `<div class="logo${sm ? ' sm' : ''}" aria-hidden="true">${esc(iniciales(P.nombre))}</div>`; }
 
 const SVG = b => `<svg viewBox="0 0 24 24" aria-hidden="true">${b}</svg>`;
-export function icono(m) {
+// Galería de íconos para los motivos de consulta (dibujos propios)
+export const ICONOS = {
+  control: ['Control', '<path d="M4 20h16M7 20v-6M12 20V8M17 20v-9"/><circle cx="12" cy="4.5" r="1.5"/>'],
+  vacuna: ['Vacuna', '<path d="M18 3l3 3M19.5 4.5l-9 9M15 5l4 4M7 11l6 6M5 17l2 2M3 21l3-3"/>'],
+  fiebre: ['Fiebre', '<path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/><path d="M12 9v8"/>'],
+  certificado: ['Certificado', '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h4"/>'],
+  estetoscopio: ['Consulta', '<path d="M6 3v6a4 4 0 0 0 8 0V3M10 13v3a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="12" r="2"/>'],
+  mamadera: ['Alimentación', '<path d="M10 2h4M10.5 2v2.5L9 6.5V20a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6.5l-1.5-2V2"/><path d="M9 11h6M9 15h6"/>'],
+  oido: ['Oído', '<path d="M7 9a5 5 0 0 1 10 0c0 3-3 4-3 7a3 3 0 0 1-5.5 1.7"/><path d="M10 9a2 2 0 0 1 4 0c0 1.5-2 2-2 3.5"/>'],
+  ojo: ['Ojos', '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'],
+  curita: ['Herida', '<rect x="2.5" y="8" width="19" height="8" rx="4" transform="rotate(-45 12 12)"/><path d="M10 10h.01M14 14h.01M10 14h.01M14 10h.01"/>'],
+  pulmones: ['Respiración', '<path d="M12 3v8M12 11c-1.5 1-3 1-3 1M12 11c1.5 1 3 1 3 1"/><path d="M8.5 7C5 7 3 12 3 16.5 3 19 5 20 7 19c2-.8 2-3 2-5V8.5A1.5 1.5 0 0 0 8.5 7zM15.5 7C19 7 21 12 21 16.5c0 2.5-2 3.5-4 2.5-2-.8-2-3-2-5V8.5A1.5 1.5 0 0 1 15.5 7z"/>'],
+  diente: ['Dientes', '<path d="M7 3c-2.5 0-4 2-4 4.5 0 3 1.5 4.5 2 7.5.4 2.6 1 6 2.5 6 1.7 0 1.5-5 4.5-5s2.8 5 4.5 5c1.5 0 2.1-3.4 2.5-6 .5-3 2-4.5 2-7.5C21 5 19.5 3 17 3c-2 0-3 1-5 1S9 3 7 3z"/>'],
+  corazon: ['Corazón', '<path d="M12 20s-7.5-4.6-9-9.5C2 6.5 5 4 8 4c2 0 3.2 1.2 4 2.4C12.8 5.2 14 4 16 4c3 0 6 2.5 5 6.5-1.5 4.9-9 9.5-9 9.5z"/><path d="M3.5 12h4l2-3 2.5 6 2-3h6"/>'],
+  balanza: ['Peso', '<path d="M5 4h14l2 16H3z"/><circle cx="12" cy="10" r="3"/><path d="M12 10l1.5-1.5"/>'],
+  hueso: ['Huesos', '<path d="M15 4.5a2.5 2.5 0 1 1 4 2.5 2.5 2.5 0 1 1-2.5 4L11 16.5a2.5 2.5 0 1 1-4 2.5 2.5 2.5 0 1 1 2.5-4L15 9.5a2.5 2.5 0 0 1 0-5z"/>'],
+  remedio: ['Medicación', '<rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/>'],
+  bebe: ['Recién nacido', '<circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M9.5 15a3.5 3.5 0 0 0 5 0M12 3c-1 1.5-1 3 0 4"/>'],
+  manzana: ['Nutrición', '<path d="M12 7c-1.5-1-5-1.5-6.5 1.5C4 12 6 20 9 20c1.3 0 1.8-.6 3-.6s1.7.6 3 .6c3 0 5-8 3.5-11.5C17 5.5 13.5 6 12 7z"/><path d="M12 7c0-2 1-3.5 3-4"/>'],
+  gota: ['Análisis', '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/>'],
+  piel: ['Piel', '<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1"/><circle cx="14.5" cy="9" r="1.2"/><circle cx="13" cy="14.5" r="1"/><circle cx="8.5" cy="15" r=".8"/>'],
+  panza: ['Panza', '<path d="M8 3v3c-3 1.5-4 4.5-4 7.5A7.5 7.5 0 0 0 12 21a7.5 7.5 0 0 0 8-7.5c0-3-1-6-4-7.5V3"/><circle cx="12" cy="14" r="1.2"/>']
+};
+export const iconoSvg = k => SVG((ICONOS[k] || ICONOS.estetoscopio)[1]);
+export function iconoAuto(m) {
   const t = String(m).toLowerCase();
-  if (t.includes('control')) return SVG('<path d="M4 20h16M7 20v-6M12 20V8M17 20v-9"/><circle cx="12" cy="4.5" r="1.5"/>');
-  if (t.includes('vacun')) return SVG('<path d="M18 3l3 3M19.5 4.5l-9 9M15 5l4 4M7 11l6 6M5 17l2 2M3 21l3-3"/>');
-  if (t.includes('enferm') || t.includes('fiebre')) return SVG('<path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/><path d="M12 9v8"/>');
-  if (t.includes('certif')) return SVG('<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h4"/>');
-  return SVG('<path d="M6 3v6a4 4 0 0 0 8 0V3M10 13v3a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="12" r="2"/>');
+  if (t.includes('control')) return 'control';
+  if (t.includes('vacun')) return 'vacuna';
+  if (t.includes('enferm') || t.includes('fiebre')) return 'fiebre';
+  if (t.includes('certif')) return 'certificado';
+  if (t.includes('oíd') || t.includes('oid')) return 'oido';
+  if (t.includes('ojo') || t.includes('vista')) return 'ojo';
+  if (t.includes('peso')) return 'balanza';
+  if (t.includes('análisis') || t.includes('analisis') || t.includes('laboratorio')) return 'gota';
+  if (t.includes('recién') || t.includes('recien') || t.includes('nacido')) return 'bebe';
+  return 'estetoscopio';
 }
+export const icono = (m, P) => iconoSvg((P && P.motivosIcono && P.motivosIcono[m]) || iconoAuto(m));
+export const urgenciaDefecto = P => 'Si tiene fiebre alta, le cuesta respirar o es urgente, no esperes al turno: ' + (P.telefono ? 'llamá al ' + P.telefono + ' o ' : '') + 'andá a la guardia.';
+export const textoUrgencia = P => P.urgencia === undefined ? urgenciaDefecto(P) : P.urgencia;
 
 /* ---------- Avisos cortos ---------- */
 export function toast(m) { const t = document.getElementById('toast'); if (!t) return; t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2800); }
