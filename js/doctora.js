@@ -2,6 +2,7 @@
 import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
   doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js';
 import { ADMINS, PLATAFORMA } from './firebase-config.js';
+import { abrirRecorte } from './recorte.js';
 import { esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, achicarImagen, sinConfig, configNueva } from './common.js';
 
@@ -123,7 +124,9 @@ const PRO = {
     if (S.sec === 'apariencia') c = `<h3>Elegí tu tema</h3><div class="temas">${Object.entries(TEMAS).map(([k, t]) => `<button class="tema${P.tema === k ? ' sel' : ''}" data-a="tema" data-t="${k}" aria-pressed="${P.tema === k}"><div class="mini" style="background:${t.head}">${decoSvg(k, 'x')}</div><div class="nm"><span class="dot" style="background:${t.accent}"></span>${t.nombre}</div></button>`).join('')}</div>
       <label class="switch" for="c-dib">Dibujitos en el encabezado<input type="checkbox" id="c-dib" data-c="dibujos" ${P.dibujos ? 'checked' : ''}></label>
       <div class="row"><label class="grow" for="c-col">Color de los botones<input type="color" id="c-col" data-c="color" value="${esc(P.colorPropio || TEMAS[P.tema].accent)}" style="height:44px;padding:4px"></label>${P.colorPropio ? `<button class="btn sm" data-a="colorTema" style="align-self:flex-end">Usar el del tema</button>` : ''}</div>
-      <div class="row">${logoHtml(P)}<label class="grow" for="c-logo">Tu logo<input type="file" id="c-logo" accept="image/*" data-c="logo"></label></div>${P.logo ? `<button class="btn sm" data-a="quitarLogo">Quitar logo</button>` : ''}
+      <div class="row">${logoHtml(P)}<div class="grow"><label for="c-logo">Tu logo o foto</label><input type="file" id="c-logo" accept="image/*" data-c="logo"></div></div>
+      ${P.logo ? `<div class="grid2"><button class="btn sm" data-a="ajustarLogo">Acomodar logo</button><button class="btn sm" data-a="quitarLogo">Quitar logo</button></div>
+      <div><p class="small muted" style="margin-bottom:6px">Forma del logo</p><div class="grid2"><button class="chip${P.logoForma !== 'cuadrado' ? ' sel' : ''}" data-a="formaLogo" data-f="redondo">Redondo</button><button class="chip${P.logoForma === 'cuadrado' ? ' sel' : ''}" data-a="formaLogo" data-f="cuadrado">Cuadrado</button></div></div>` : ''}
       <p class="small muted">Así lo ven las familias:</p>
       <div class="preview"><div class="band">${deco(P)}${logoHtml(P, true)}<div class="txt grow"><h3>${esc(P.nombre)}</h3><p class="sub">${esc(P.especialidad)}</p></div></div><div style="padding:12px"><span class="btn pri block" aria-hidden="true">Sacar turno</span></div></div>`;
     else if (S.sec === 'info') c = `<h3>Mi información</h3>
@@ -256,7 +259,9 @@ const A = {
   sec: d => { S.sec = d.s; render(); },
   tema: d => guardarP({ tema: d.t, colorPropio: '' }, 'Tema ' + TEMAS[d.t].nombre + ' aplicado'),
   colorTema: () => guardarP({ colorPropio: '' }),
-  quitarLogo: () => guardarP({ logo: '' }),
+  quitarLogo: () => guardarP({ logo: '' }, 'Logo quitado'),
+  ajustarLogo: () => recortar(S.P.logo),
+  formaLogo: d => guardarP({ logoForma: d.f }, d.f === 'cuadrado' ? 'Logo cuadrado' : 'Logo redondo'),
   guardarInfo: () => guardarP({ nombre: val('c-nom') || S.P.nombre, especialidad: val('c-esp'), lugar: val('c-lug'), direccion: val('c-dir'), telefono: val('c-tel') }, 'Cambios guardados'),
   guardarAvisos: () => guardarP({ aviso: val('c-aviso'), obraExterna: val('c-ext') }, 'Avisos guardados'),
   guardarTurnos: () => { const lines = id => (document.getElementById(id).value || '').split('\n').map(s => s.trim()).filter(Boolean); guardarP({ obras: lines('c-obras'), motivos: lines('c-mot'), limite: Number(val('c-lim')) || 1 }, 'Cambios guardados'); }
@@ -275,7 +280,7 @@ document.addEventListener('change', async e => {
   if (c === 'dur') return guardarP({ duracion: Number(el.value) }, 'Turnos de ' + el.value + ' minutos');
   if (c === 'dibujos') return guardarP({ dibujos: el.checked });
   if (c === 'color') return guardarP({ colorPropio: el.value });
-  if (c === 'logo' && el.files && el.files[0]) { try { guardarP({ logo: await achicarImagen(el.files[0]) }, 'Logo cargado'); } catch (_) { toast('No se pudo leer la imagen'); } return; }
+  if (c === 'logo' && el.files && el.files[0]) { const f = el.files[0]; el.value = ''; const r = new FileReader(); r.onload = () => recortar(r.result); r.onerror = () => toast('No se pudo leer la imagen'); r.readAsDataURL(f); return; }
   if (c === 'darDni') { borradorDar(); const p = pacientes().find(x => x.dni && x.dni === S.dar.dni); if (p) { S.dar.nombre = p.nombre; S.dar.tel = S.dar.tel || p.contacto; S.dar.obra = S.dar.obra || p.obra; toast('Paciente encontrado: ' + p.nombre); render(); } }
 });
 
@@ -302,9 +307,16 @@ if (configurado) {
     S.cargando = true; render(); buscarConsultorio();
   });
 } else { S.cargando = false; }
+function recortar(src) {
+  abrirRecorte(src, S.P.logoForma, S.P.nombre, (res, err) => {
+    if (err) return toast(err);
+    if (res) guardarP({ logo: res.logo, logoForma: res.forma }, 'Logo guardado');
+  });
+}
 // Botón "atrás" del celular: vuelve a la pantalla anterior de la app en vez de cerrarla
 function marcar() { history.pushState({ tab: S.tab, ficha: S.ficha || null }, ''); }
 window.addEventListener('popstate', e => {
+  if (document.querySelector('.modal-fondo')) return;
   const st = e.state || { tab: 'agenda', ficha: null };
   S.tab = st.tab || 'agenda'; S.ficha = st.ficha || null; S.copia = null; S.err = ''; S.confirmar = null; render(); top();
 });

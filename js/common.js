@@ -88,7 +88,7 @@ export function aplicarTema(P) {
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', t.head);
 }
 export const deco = P => P.dibujos ? decoSvg(P.tema) : '';
-export function logoHtml(P, sm) { return P.logo ? `<img class="logo${sm ? ' sm' : ''}" src="${esc(P.logo)}" alt="Logo de ${esc(P.nombre)}">` : `<div class="logo${sm ? ' sm' : ''}" aria-hidden="true">${esc(iniciales(P.nombre))}</div>`; }
+export function logoHtml(P, sm) { return P.logo ? `<img class="logo${sm ? ' sm' : ''}${P.logoForma === 'cuadrado' ? ' cuadrado' : ''}" src="${esc(P.logo)}" alt="Logo de ${esc(P.nombre)}">` : `<div class="logo${sm ? ' sm' : ''}" aria-hidden="true">${esc(iniciales(P.nombre))}</div>`; }
 
 const SVG = b => `<svg viewBox="0 0 24 24" aria-hidden="true">${b}</svg>`;
 export function icono(m) {
