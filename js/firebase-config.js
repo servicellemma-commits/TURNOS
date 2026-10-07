@@ -6,12 +6,12 @@
 //    (Configuración del proyecto → Tus apps → App web).
 //    No es una clave secreta: la seguridad está en las reglas (firestore.rules).
 export const firebaseConfig = {
-  apiKey: "PEGAR_AQUI",
-  authDomain: "PEGAR_AQUI",
-  projectId: "PEGAR_AQUI",
-  storageBucket: "PEGAR_AQUI",
-  messagingSenderId: "PEGAR_AQUI",
-  appId: "PEGAR_AQUI"
+  apiKey: "AIzaSyDGRzZeQ0GCGV39in4O4xRmKzJaLPvV1iY",
+  authDomain: "turnos-pediatria.firebaseapp.com",
+  projectId: "turnos-pediatria",
+  storageBucket: "turnos-pediatria.firebasestorage.app",
+  messagingSenderId: "334789369207",
+  appId: "1:334789369207:web:b894419b1c8363e269d572"
 };
 
 // 2) Profesional que se muestra si el link no dice cuál (ej: .../#dra-chavez)
