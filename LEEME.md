@@ -19,7 +19,7 @@ Actualizar el código **no borra datos**: los datos están en Firebase, separado
 1. **Firebase → Configuración del proyecto → Tus apps → App web:** copiá el bloque `firebaseConfig` y pegalo en `js/firebase-config.js`.
 2. **Firebase → Authentication → Método de acceso:** activá **Anónimo** y **Google**.
 3. **Firebase → Authentication → Configuración → Dominios autorizados:** agregá `servicellemma-commits.github.io`.
-4. **Firebase → Firestore Database → Reglas:** pegá el contenido de `firestore.rules`, cambiá `ADMIN_MAIL@gmail.com` por tu mail y tocá **Publicar**.
+4. **Firebase → Firestore Database → Reglas:** pegá el contenido de `firestore.rules`, cambiá `emmatissera674@gmail.com` por tu mail y tocá **Publicar**.
 5. En `js/firebase-config.js` poné el mismo mail en `ADMINS`.
 6. Entrá a la **app del consultorio** con tu Google (administrador) y creá el profesional: link `dra-chavez` y el Gmail de la doctora.
 7. La doctora entra a la app con su Gmail y desde Chrome toca **⋮ → Agregar a pantalla de inicio** para tenerla como app.

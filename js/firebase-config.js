@@ -19,7 +19,7 @@ export const PROFESIONAL_POR_DEFECTO = "dra-chavez";
 
 // 3) Mails de los administradores de la plataforma (pueden crear profesionales).
 //    Tienen que ser los mismos que están en firestore.rules.
-export const ADMINS = ["ADMIN_MAIL@gmail.com"];
+export const ADMINS = ["emmatissera674@gmail.com"];
 
 // 4) Código por SMS. Necesita el plan Blaze de Firebase y activar "Teléfono"
 //    en Authentication. Mientras esté en false, el turno se confirma sin código.
