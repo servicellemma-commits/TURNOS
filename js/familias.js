@@ -133,7 +133,22 @@ function render() {
   aplicarTema(S.P); document.title = 'Turnos · ' + S.P.nombre;
   app.innerHTML = `<div class="top"></div>${V[S.pant]()}<p class="foot">${esc(PLATAFORMA)} · turnos online</p>`;
 }
-function ir(p) { S.pant = p; S.err = ''; S.confirmar = null; render(); top(); }
+function ir(p, sinHistorial) {
+  S.pant = p; S.err = ''; S.confirmar = null;
+  if (p === 'cartilla' || p === 'inicio') S.res = null;
+  if (!sinHistorial) history.pushState({ pant: p, paso: S.res ? S.res.paso : 0 }, '');
+  render(); top();
+}
+// Botón "atrás" del celular: vuelve al paso anterior en vez de salir de la página
+window.addEventListener('popstate', e => {
+  const st = e.state || { pant: 'cartilla', paso: 0 };
+  if (S.enviando) { history.pushState({ pant: S.pant, paso: S.res ? S.res.paso : 0 }, ''); return; }
+  leerSiHay();
+  if ((st.pant === 'reservar' || st.pant === 'codigo') && !S.res) { S.pant = 'cartilla'; history.replaceState({ pant: 'cartilla', paso: 0 }, ''); }
+  else { S.pant = st.pant; if (S.res && st.paso) S.res.paso = st.paso; }
+  S.err = ''; S.confirmar = null; render(); top();
+});
+function leerSiHay() { if (S.pant === 'reservar' && S.res && pasoAct() === 'datos') { leerG(); return true; } return false; }
 const val = id => (document.getElementById(id)?.value || '').trim();
 function leerG() { const g = S.res.g; g.chico = val('g-chico'); g.dni = soloNum(val('g-dni')); g.nac = val('g-nac'); g.obra = val('g-obra'); g.resp = val('g-resp'); g.cont = val('g-cont'); g.guardar = !!document.getElementById('g-guardar')?.checked; }
 
@@ -161,7 +176,7 @@ async function terminarReserva(pacientes, responsable, guardar) {
       pacientes.forEach(p => { if (!hijos.some(h => h.dni && h.dni === p.dni)) hijos.push({ id: uid(), ...p }); });
       await setDoc(doc(db, 'familias', S.user.uid), { resp: responsable.nombre, contacto: responsable.contacto, hijos }, { merge: true });
     }
-    S.enviando = false; ir('listo');
+    S.enviando = false; S.res = null; history.replaceState({ pant: 'listo', paso: 0 }, ''); ir('listo', true);
   } catch (e) {
     console.error(e); S.enviando = false;
     S.err = e.code === 'permission-denied' ? 'Justo alguien tomó ese horario. Volvé y elegí otro.' : 'No pudimos reservar. Revisá tu conexión y probá de nuevo.';
@@ -178,7 +193,7 @@ const A = {
   dia: d => { S.res.fecha = d.k; S.res.hora = null; S.err = ''; render(); },
   hora: d => { S.res.hora = d.h; S.err = ''; render(); },
   primero: () => { const pl = primerLibre(S.P, cuantos(), ocupado); if (pl) { S.res.fecha = pl.fecha; S.res.hora = pl.hora; S.err = ''; } render(); },
-  atras: () => { if (pasoAct() === 'datos') leerG(); S.res.paso = Math.max(1, S.res.paso - 1); S.err = ''; render(); top(); },
+  atras: () => history.back(),
   sig: () => {
     const r = S.res, P = S.P, act = pasoAct();
     if (act === 'hijos') {
@@ -190,7 +205,7 @@ const A = {
     }
     if (act === 'motivo' && !r.motivo) { S.err = 'Elegí el motivo de la consulta.'; return render(); }
     if (act === 'dia' && (!r.fecha || !r.hora)) { S.err = 'Elegí un día y un horario.'; return render(); }
-    r.paso++; S.err = ''; render(); top();
+    r.paso++; S.err = ''; history.pushState({ pant: 'reservar', paso: r.paso }, ''); render(); top();
   },
   confirmar: () => {
     const r = S.res; S.enviando = true; S.err = ''; render();
@@ -222,13 +237,13 @@ const A = {
     try { await S.sms.confirm(cod); const g = S.res.g; terminarReserva([{ nombre: g.chico, dni: g.dni, nac: g.nac, obra: g.obra }], { nombre: g.resp, contacto: g.cont }, g.guardar); }
     catch (e) { console.error(e); S.enviando = false; S.err = 'El código no coincide. Revisalo y probá de nuevo.'; render(); }
   },
-  volverReserva: () => { S.pant = 'reservar'; S.err = ''; render(); },
+  volverReserva: () => history.back(),
   guardarHijo: async () => {
     const h = { id: uid(), nombre: val('h-nom'), dni: soloNum(val('h-dni')), nac: val('h-nac'), obra: val('h-obra') };
     if (!h.nombre || !h.nac) { S.err = 'Completá el nombre y la fecha de nacimiento.'; return render(); }
     try { await setDoc(doc(db, 'familias', S.user.uid), { hijos: [...hijosFam(), h] }, { merge: true }); toast(nombreCorto(h.nombre) + ' agregado'); }
     catch (e) { console.error(e); S.err = 'No pudimos guardar. Probá de nuevo.'; return render(); }
-    if (S.res && S.res.cuenta) { S.res.hijos.push(h.id); S.pant = 'reservar'; S.err = ''; render(); }
+    if (S.res && S.res.cuenta) { S.res.hijos.push(h.id); S.err = ''; history.back(); }
     else if (S.res && !S.res.cuenta) { A.reservar(); } else ir('inicio');
   },
   pregCancelar: d => { S.confirmar = d.id; render(); },
@@ -257,4 +272,5 @@ if (configurado) {
     render();
   });
 }
+history.replaceState({ pant: 'cartilla', paso: 0 }, '');
 render();

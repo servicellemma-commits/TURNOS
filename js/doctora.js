@@ -196,7 +196,7 @@ const A = {
     try { await setDoc(doc(db, 'profesionales', slug), P); toast('Profesional creado'); buscarConsultorio(); }
     catch (e) { console.error(e); S.err = 'No se pudo crear. ¿Ya existe ese link? ¿Tu mail está en las reglas como administrador?'; render(); }
   },
-  tab: d => { S.tab = d.t; S.err = ''; S.confirmar = null; S.ficha = null; S.copia = null; render(); },
+  tab: d => { if (S.tab === d.t && !S.ficha) return; S.tab = d.t; S.err = ''; S.confirmar = null; S.ficha = null; S.copia = null; marcar(); render(); },
   dia: d => { S.dia = d.k; S.confirmar = null; render(); },
   pregCancelar: d => { S.confirmar = d.id; render(); },
   noCancelar: () => { S.confirmar = null; render(); },
@@ -207,8 +207,8 @@ const A = {
   },
   atendido: async d => { try { await updateDoc(doc(db, 'profesionales', S.slug, 'turnos', d.id), { estado: 'atendido' }); } catch (e) { console.error(e); toast('No se pudo guardar.'); } },
   copiarLink: () => { const l = linkPublico(); try { navigator.clipboard.writeText(l).then(() => toast('Link copiado'), () => toast('Mantené apretado el link para copiarlo')); } catch (e) { toast('Mantené apretado el link para copiarlo'); } },
-  irDar: () => { S.dar = { fecha: slotsFor(S.P, S.dia, turnoEn).some(s => !s.t) ? S.dia : null, hora: null, motivo: (S.P.motivos || [])[0] }; S.tab = 'dar'; S.err = ''; render(); top(); },
-  darEn: d => { S.dar = { fecha: S.dia, hora: d.h, motivo: (S.P.motivos || [])[0] }; S.tab = 'dar'; S.err = ''; render(); top(); },
+  irDar: () => { S.dar = { fecha: slotsFor(S.P, S.dia, turnoEn).some(s => !s.t) ? S.dia : null, hora: null, motivo: (S.P.motivos || [])[0] }; S.tab = 'dar'; marcar(); S.err = ''; render(); top(); },
+  darEn: d => { S.dar = { fecha: S.dia, hora: d.h, motivo: (S.P.motivos || [])[0] }; S.tab = 'dar'; marcar(); S.err = ''; render(); top(); },
   darDia: d => { borradorDar(); S.dar.fecha = d.k; S.dar.hora = null; render(); },
   darHora: d => { borradorDar(); S.dar.hora = d.h; render(); },
   guardarDar: async () => {
@@ -225,11 +225,11 @@ const A = {
         responsable: { nombre: prev ? prev.resp : '', contacto: d.tel || (prev ? prev.contacto : '') }, creado: serverTimestamp() });
       b.set(doc(db, 'profesionales', S.slug, 'ocupados', ocupadoId(d.fecha, d.hora)), { fecha: d.fecha, hora: d.hora, turnoId: ref.id });
       await b.commit();
-      toast('Turno guardado: ' + nombreCorto(d.nombre) + ', ' + d.hora + ' h'); S.dia = d.fecha; S.tab = 'agenda'; S.dar = {}; S.enviando = false; render(); top();
+      toast('Turno guardado: ' + nombreCorto(d.nombre) + ', ' + d.hora + ' h'); S.dia = d.fecha; S.dar = {}; S.enviando = false; S.tab = 'agenda'; history.replaceState({ tab: 'agenda', ficha: null }, ''); render(); top(); top();
     } catch (e) { console.error(e); S.enviando = false; S.err = 'No se pudo guardar. Puede que alguien haya tomado ese horario recién.'; render(); }
   },
-  verFicha: d => { S.ficha = d.k; S.tab = 'pacientes'; S.copia = null; S.err = ''; render(); top(); },
-  cerrarFicha: () => { S.ficha = null; S.copia = null; render(); },
+  verFicha: d => { S.ficha = d.k; S.tab = 'pacientes'; S.copia = null; S.err = ''; marcar(); render(); top(); },
+  cerrarFicha: () => history.back(),
   guardarFicha: async () => {
     const x = pacientes().find(p => p.clave === S.ficha);
     try { await setDoc(doc(db, 'profesionales', S.slug, 'pacientes', S.ficha), { afiliado: val('fa-afil'), nac: val('fa-nac') || x.nac || '', notas: x.notas }, { merge: true }); toast('Ficha guardada'); }
@@ -302,5 +302,12 @@ if (configurado) {
     S.cargando = true; render(); buscarConsultorio();
   });
 } else { S.cargando = false; }
+// Botón "atrás" del celular: vuelve a la pantalla anterior de la app en vez de cerrarla
+function marcar() { history.pushState({ tab: S.tab, ficha: S.ficha || null }, ''); }
+window.addEventListener('popstate', e => {
+  const st = e.state || { tab: 'agenda', ficha: null };
+  S.tab = st.tab || 'agenda'; S.ficha = st.ficha || null; S.copia = null; S.err = ''; S.confirmar = null; render(); top();
+});
+history.replaceState({ tab: 'agenda', ficha: null }, '');
 render();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
