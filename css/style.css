@@ -152,3 +152,13 @@ textarea{min-height:90px;resize:vertical}
 .rc-previa{border-radius:12px;min-height:0;padding:10px 12px}
 .rc-previa .txt{padding-right:0}
 .rc-previa .logo{background:#fff}
+
+/* Engranaje de configuración y borrado de pacientes */
+.band .btn-redondo{position:relative;z-index:1;width:38px;height:38px;border-radius:50%;border:0;background:#ffffffcc;color:var(--head-fg);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:none;padding:0}
+.band .btn-redondo svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.band .btn-redondo.sel{background:#fff;box-shadow:0 0 0 2px var(--accent)}
+.btn.borde-rojo{border-color:var(--danger)}
+.btn.rojo{background:var(--danger);border-color:var(--danger);color:#fff}
+.borrar{background:var(--danger-bg);color:var(--danger);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.band-app .txt{padding-right:0}
+.band-app h2{font-size:19px}

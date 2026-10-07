@@ -43,8 +43,8 @@ function vista() {
     <div class="pad"><p class="muted small">Entrá con tu cuenta de Google. Activá la verificación en dos pasos de tu cuenta para más seguridad.</p>${errHtml()}<button class="btn pri block" data-a="entrar">Entrar con Google</button></div></div>`;
   if (!S.slug) return esAdmin() ? crearProfesional() : `<div class="card"><h2>Tu cuenta no tiene un consultorio asignado</h2><p class="muted small">Entraste como ${esc(S.user.email)}. Pedile al administrador que te dé de alta con este mail.</p><button class="btn" data-a="salir">Salir</button></div>`;
   if (!S.P) return `<div class="card"><p class="muted">Cargando…</p></div>`;
-  const P = S.P, tabs = [['agenda', 'Agenda'], ['dar', 'Dar turno'], ['pacientes', 'Pacientes'], ['horarios', 'Horarios'], ['bloqueos', 'Bloquear días'], ['config', 'Configurar']];
-  return `<div class="card banded"><div class="band">${deco(P)}${logoHtml(P, true)}<div class="txt grow"><p class="sub">${esc(fechaLarga(ahora().HOY))}</p><h2>Hola, ${esc(nombreCorto(P.nombre.replace(/^(dra?\.?|dr\.?)\s+/i, '')))}</h2></div><button class="btn sm" data-a="salir">Salir</button></div>
+  const P = S.P, tabs = [['agenda', 'Agenda'], ['dar', 'Dar turno'], ['pacientes', 'Pacientes'], ['bloqueos', 'Bloquear días']];
+  return `<div class="card banded"><div class="band band-app">${deco(P)}${logoHtml(P, true)}<div class="txt grow"><p class="sub">${esc(fechaLarga(ahora().HOY))}</p><h2>Hola, ${esc(nombreCorto(P.nombre.replace(/^(dra?\.?|dr\.?)\s+/i, '')))}</h2></div><button class="btn-redondo${S.tab === 'config' ? ' sel' : ''}" data-a="tab" data-t="config" aria-label="Configuración" title="Configuración"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 4.3c.4-1.8 3-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.5a1.7 1.7 0 0 0-1 2.5c.9 1.6-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1.1c-.4 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.6-1.1c-1.5.9-3.3-.8-2.4-2.4a1.7 1.7 0 0 0-1-2.5c-1.8-.5-1.8-3 0-3.5a1.7 1.7 0 0 0 1-2.5c-.9-1.6.9-3.3 2.4-2.4a1.7 1.7 0 0 0 2.6-1.1z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn sm" data-a="salir">Salir</button></div>
     <div class="pad"><div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="chip${S.tab === k ? ' sel' : ''}" role="tab" aria-selected="${S.tab === k}" data-a="tab" data-t="${k}">${l}</button>`).join('')}</div></div></div>
     ${PRO[S.tab]()}`;
 }
@@ -119,7 +119,7 @@ const PRO = {
   },
 
   config() {
-    const P = S.P, secs = [['apariencia', 'Apariencia'], ['info', 'Mi información'], ['avisos', 'Avisos'], ['turnos', 'Turnos']];
+    const P = S.P, secs = [['apariencia', 'Apariencia'], ['info', 'Mi información'], ['horarios', 'Horarios'], ['avisos', 'Avisos'], ['turnos', 'Turnos']];
     let c = '';
     if (S.sec === 'apariencia') c = `<h3>Elegí tu tema</h3><div class="temas">${Object.entries(TEMAS).map(([k, t]) => `<button class="tema${P.tema === k ? ' sel' : ''}" data-a="tema" data-t="${k}" aria-pressed="${P.tema === k}"><div class="mini" style="background:${t.head}">${decoSvg(k, 'x')}</div><div class="nm"><span class="dot" style="background:${t.accent}"></span>${t.nombre}</div></button>`).join('')}</div>
       <label class="switch" for="c-dib">Dibujitos en el encabezado<input type="checkbox" id="c-dib" data-c="dibujos" ${P.dibujos ? 'checked' : ''}></label>
@@ -144,7 +144,8 @@ const PRO = {
       <label for="c-mot">Motivos de consulta (uno por línea)</label><textarea id="c-mot">${esc((P.motivos || []).join('\n'))}</textarea>
       <label for="c-lim">Turnos pendientes por chico</label><select id="c-lim">${[1, 2, 3].map(n => `<option value="${n}"${P.limite === n ? ' selected' : ''}>${n}</option>`).join('')}</select>
       <button class="btn pri block" data-a="guardarTurnos">Guardar</button>`;
-    return `<div class="card"><div class="secs">${secs.map(([k, l]) => `<button class="chip${S.sec === k ? ' sel' : ''}" data-a="sec" data-s="${k}">${l}</button>`).join('')}</div></div><div class="card">${c}</div>`;
+    if (S.sec === 'horarios') return `<div class="card"><h2>Configuración</h2><div class="secs">${secs.map(([k, l]) => `<button class="chip${S.sec === k ? ' sel' : ''}" data-a="sec" data-s="${k}">${l}</button>`).join('')}</div></div>${PRO.horarios()}`;
+    return `<div class="card"><h2>Configuración</h2><div class="secs">${secs.map(([k, l]) => `<button class="chip${S.sec === k ? ' sel' : ''}" data-a="sec" data-s="${k}">${l}</button>`).join('')}</div></div><div class="card">${c}</div>`;
   }
 };
 
@@ -163,7 +164,8 @@ function ficha() {
     <label for="fa-nota">Nueva nota</label><textarea id="fa-nota" style="min-height:70px" placeholder="Pedido de hemograma, control de peso…"></textarea>
     ${errHtml()}<button class="btn" data-a="agregarNota">Agregar nota</button>
     ${x.notas.length ? x.notas.map(n => `<p class="nota"><span>${fechaCorta(n.fecha)}</span><br>${esc(n.texto)}</p>`).join('') : '<p class="muted small">Sin notas todavía.</p>'}</div>
-  <div class="card"><h3>Turnos</h3><div class="list">${ts.map(t => `<div class="item"><div class="grow">${esc(fechaLarga(t.fecha))}, ${t.hora} h<p class="small muted">${esc(t.motivo)}</p></div><span class="pill ${t.estado === 'cancelado' ? 'warn' : t.estado === 'atendido' ? 'ok' : 'free'}">${t.estado === 'cancelado' ? 'Cancelado' : t.estado === 'atendido' ? 'Atendido' : 'Pendiente'}</span></div>`).join('')}</div></div>`;
+  <div class="card"><h3>Turnos</h3><div class="list">${ts.map(t => `<div class="item"><div class="grow">${esc(fechaLarga(t.fecha))}, ${t.hora} h<p class="small muted">${esc(t.motivo)}</p></div><span class="pill ${t.estado === 'cancelado' ? 'warn' : t.estado === 'atendido' ? 'ok' : 'free'}">${t.estado === 'cancelado' ? 'Cancelado' : t.estado === 'atendido' ? 'Atendido' : 'Pendiente'}</span></div>`).join('')}</div></div>
+  <div class="card">${S.borrar === x.clave ? `<div class="borrar"><b>¿Eliminar a ${esc(nombreCorto(x.nombre))}?</b><p class="small">Se borran su ficha, notas e historial de turnos.${x.turnos.some(t => t.estado === 'activo') ? ' Sus turnos pendientes se cancelan y el horario queda libre.' : ''} No se puede deshacer.</p><div class="grid2"><button class="btn" data-a="noBorrar">No, volver</button><button class="btn rojo" data-a="eliminarPaciente" ${S.enviando ? 'disabled' : ''}>${S.enviando ? 'Eliminando…' : 'Sí, eliminar'}</button></div></div>` : `<button class="btn block danger borde-rojo" data-a="pregBorrar">Eliminar paciente</button>`}</div>`;
 }
 
 function render() {
@@ -231,12 +233,28 @@ const A = {
       toast('Turno guardado: ' + nombreCorto(d.nombre) + ', ' + d.hora + ' h'); S.dia = d.fecha; S.dar = {}; S.enviando = false; S.tab = 'agenda'; history.replaceState({ tab: 'agenda', ficha: null }, ''); render(); top(); top();
     } catch (e) { console.error(e); S.enviando = false; S.err = 'No se pudo guardar. Puede que alguien haya tomado ese horario recién.'; render(); }
   },
-  verFicha: d => { S.ficha = d.k; S.tab = 'pacientes'; S.copia = null; S.err = ''; marcar(); render(); top(); },
+  verFicha: d => { S.borrar = null; S.ficha = d.k; S.tab = 'pacientes'; S.copia = null; S.err = ''; marcar(); render(); top(); },
   cerrarFicha: () => history.back(),
   guardarFicha: async () => {
     const x = pacientes().find(p => p.clave === S.ficha);
     try { await setDoc(doc(db, 'profesionales', S.slug, 'pacientes', S.ficha), { afiliado: val('fa-afil'), nac: val('fa-nac') || x.nac || '', notas: x.notas }, { merge: true }); toast('Ficha guardada'); }
     catch (e) { console.error(e); toast('No se pudo guardar.'); }
+  },
+  pregBorrar: () => { S.borrar = S.ficha; render(); },
+  noBorrar: () => { S.borrar = null; render(); },
+  eliminarPaciente: async () => {
+    const x = pacientes().find(p => p.clave === S.ficha); if (!x) return;
+    S.enviando = true; render();
+    try {
+      const b = writeBatch(db);
+      x.turnos.forEach(t => {
+        b.delete(doc(db, 'profesionales', S.slug, 'turnos', t.id));
+        if (t.estado !== 'cancelado') b.delete(doc(db, 'profesionales', S.slug, 'ocupados', ocupadoId(t.fecha, t.hora)));
+      });
+      b.delete(doc(db, 'profesionales', S.slug, 'pacientes', x.clave));
+      await b.commit();
+      S.enviando = false; S.borrar = null; toast(nombreCorto(x.nombre) + ' eliminado'); history.back();
+    } catch (e) { console.error(e); S.enviando = false; toast('No se pudo eliminar. Probá de nuevo.'); render(); }
   },
   copiar: () => {
     const x = pacientes().find(p => p.clave === S.ficha);
