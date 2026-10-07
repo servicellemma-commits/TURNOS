@@ -2,7 +2,7 @@
 import { configurado, auth, db, onAuthStateChanged, signInAnonymously, RecaptchaVerifier, linkWithPhoneNumber,
   doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js';
 import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js';
-import { esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
+import { fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
   slotsFor, inicios, primerLibre, tramo, textoHorarios, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js';
 
 const app = document.getElementById('app');
@@ -25,6 +25,10 @@ const pasos = () => S.res.cuenta ? PASOS_CUENTA : PASOS_RAPIDO;
 const pasoAct = () => pasos()[S.res.paso - 1];
 const cuantos = () => S.res.cuenta ? Math.max(S.res.hijos.length, 1) : 1;
 
+function carteles(P) {
+  return avisosVigentes(P).map(b => `<p class="cartel"><b>${esc(b.motivo || 'Aviso')}:</b> ${esc(P.nombre)} no atiende ${esc(textoPeriodo(b))}. Esos días no hay turnos.</p>`).join('');
+}
+
 const V = {
   cartilla() {
     const P = S.P, hay = !!primerLibre(P, 1, ocupado), n = misActivos().length;
@@ -33,6 +37,7 @@ const V = {
       <div>${hay ? `<span class="pill ok">Turnos disponibles</span>` : `<span class="pill warn">Sin turnos en las próximas 2 semanas</span>`}</div>
       ${P.direccion || P.telefono ? `<p class="small">${esc(P.direccion)}${P.telefono ? `<br>Tel: <span class="wa">${esc(P.telefono)}</span>` : ''}</p>` : ''}
       <div class="hint"><b>Atiende</b><br>${esc(textoHorarios(P)) || 'Sin días cargados'}</div>
+      ${carteles(P)}
       ${P.aviso ? `<p class="alerta">${esc(P.aviso)}</p>` : ''}
       <button class="btn pri block" data-a="reservar">Sacar turno</button>
       <p class="small muted" style="text-align:center">Sin registrarte ni contraseñas.</p>
@@ -46,7 +51,7 @@ const V = {
     return `${cabecera()}
     <div class="card"><h2>${S.fam && S.fam.resp ? 'Hola, ' + esc(nombreCorto(S.fam.resp)) : 'Mis turnos'}</h2><button class="btn pri block" data-a="reservar">Sacar turno</button></div>
     <div class="card"><h3>Próximos turnos</h3>
-      ${mis.length ? `<div class="list">${mis.map(t => `<div class="item"><div class="grow"><b>${esc(nombreCorto(t.paciente.nombre))}</b> · ${esc(t.motivo)}<p class="small muted">${esc(fechaLarga(t.fecha))}, ${t.hora} h</p></div>${S.confirmar === t.id ? `<div class="row"><button class="btn sm danger" data-a="cancelar" data-id="${t.id}">Sí, cancelar</button><button class="btn sm" data-a="noCancelar">No</button></div>` : `<button class="btn sm" data-a="pregCancelar" data-id="${t.id}">Cancelar</button>`}</div>`).join('')}</div>` : `<p class="muted small">No tenés turnos pendientes en este celular.</p>`}</div>
+      ${mis.length ? `<div class="list">${mis.map(t => `<div class="item"><div class="grow"><b>${esc(nombreCorto(t.paciente.nombre))}</b> · ${esc(t.motivo)}<p class="small muted">${esc(fechaLarga(t.fecha))}, ${conH(t.hora, S.P)}</p></div>${S.confirmar === t.id ? `<div class="row"><button class="btn sm danger" data-a="cancelar" data-id="${t.id}">Sí, cancelar</button><button class="btn sm" data-a="noCancelar">No</button></div>` : `<button class="btn sm" data-a="pregCancelar" data-id="${t.id}">Cancelar</button>`}</div>`).join('')}</div>` : `<p class="muted small">No tenés turnos pendientes en este celular.</p>`}</div>
     <div class="card"><div class="row between"><h3>Mis hijos</h3><button class="btn sm" data-a="ir" data-p="hijo">Agregar</button></div>
       ${hijosFam().length ? `<div class="list">${hijosFam().map(h => `<div class="item"><div class="logo sm" aria-hidden="true">${esc(h.nombre[0] || '?')}</div><div class="grow"><b>${esc(h.nombre)}</b><p class="small muted">${esc(edad(h.nac))} · ${esc(h.obra)}</p></div></div>`).join('')}</div>` : `<p class="muted small">Todavía no guardaste hijos en este celular.</p>`}</div>
     <button class="btn link" data-a="ir" data-p="cartilla">Volver</button>`;
@@ -75,21 +80,21 @@ const V = {
       <p class="alerta" role="note">Si tiene fiebre alta, le cuesta respirar o es urgente, no esperes al turno: ${P.telefono ? `llamá al <span class="wa">${esc(P.telefono)}</span> o ` : ''}andá a la guardia.</p>`;
     } else if (act === 'dia') {
       const pl = primerLibre(P, n, ocupado), dias = proximos(14).filter(k => inicios(P, k, n, ocupado).length), hs = r.fecha ? inicios(P, r.fecha, n, ocupado) : [];
-      const grupo = (ti, l) => l.length ? `<p class="franja">${ti}</p><div class="slots">${l.map(h => `<button class="chip${r.hora === h ? ' sel' : ''}" data-a="hora" data-h="${h}" aria-pressed="${r.hora === h}">${h}</button>`).join('')}</div>` : '';
-      c = `<h2>¿Qué día te queda bien?</h2>
-      ${pl ? `<button class="rapido${r.fecha === pl.fecha && r.hora === pl.hora ? ' sel' : ''}" data-a="primero"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg><span class="grow"><b>Primer turno libre</b><br><span class="small muted">${esc(diaNombre(pl.fecha))}, ${pl.hora} h</span></span><span class="small" style="color:var(--accent);font-weight:700">Elegir</span></button>` : ''}
+      const grupo = (ti, l) => l.length ? `<p class="franja">${ti}</p><div class="slots">${l.map(h => `<button class="chip${r.hora === h ? ' sel' : ''}" data-a="hora" data-h="${h}" aria-pressed="${r.hora === h}">${fmtHora(h, P)}</button>`).join('')}</div>` : '';
+      c = `<h2>¿Qué día te queda bien?</h2>${carteles(P)}
+      ${pl ? `<button class="rapido${r.fecha === pl.fecha && r.hora === pl.hora ? ' sel' : ''}" data-a="primero"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg><span class="grow"><b>Primer turno libre</b><br><span class="small muted">${esc(diaNombre(pl.fecha))}, ${conH(pl.hora, P)}</span></span><span class="small" style="color:var(--accent);font-weight:700">Elegir</span></button>` : ''}
       ${dias.length ? `<p class="small muted">O elegí el día</p><div class="days">${dias.map(k => { const d = parseKey(k); const corto = k === t.HOY ? 'Hoy' : (k === t.MANANA ? 'Mañana' : DOWS[d.getDay()]); return `<button class="chip${r.fecha === k ? ' sel' : ''}" data-a="dia" data-k="${k}" aria-pressed="${r.fecha === k}">${corto}<b>${d.getDate()}</b><span class="small">${MES[d.getMonth()]}</span></button>`; }).join('')}</div>`
         : `<p class="muted">No hay turnos libres en las próximas dos semanas.${P.telefono ? ` Llamá al consultorio al <span class="wa">${esc(P.telefono)}</span>.` : ''}</p>`}
       ${r.fecha ? `<h3>${esc(fechaLarga(r.fecha))}</h3>${n > 1 ? `<p class="small muted">Elegí la hora del primer turno; el resto va a continuación.</p>` : ''}${grupo('Mañana', hs.filter(h => toMin(h) < 780))}${grupo('Tarde', hs.filter(h => toMin(h) >= 780))}` : ''}`;
     } else if (act === 'revisar') {
       const tr = tramo(P, r.fecha, r.hora, n, ocupado) || [];
-      c = `<h2>Revisá ${n > 1 ? 'tus turnos' : 'tu turno'}</h2><div class="resumen">${r.hijos.map((id, j) => { const h = hijosFam().find(x => x.id === id); return `<div><span>${esc(nombreCorto(h.nombre))} · ${esc(edad(h.nac))}</span><span>${tr[j] || ''} h</span></div>`; }).join('')}
+      c = `<h2>Revisá ${n > 1 ? 'tus turnos' : 'tu turno'}</h2><div class="resumen">${r.hijos.map((id, j) => { const h = hijosFam().find(x => x.id === id); return `<div><span>${esc(nombreCorto(h.nombre))} · ${esc(edad(h.nac))}</span><span>${tr[j] ? conH(tr[j], P) : ''}</span></div>`; }).join('')}
        <div><span>Motivo</span><span>${esc(r.motivo)}</span></div><div><span>Día</span><span>${esc(fechaLarga(r.fecha))}</span></div>${P.direccion ? `<div><span>Dónde</span><span>${esc(P.lugar)}<br>${esc(P.direccion)}</span></div>` : ''}</div>
       <p class="small muted">Llegá 10 minutos antes con el DNI y la credencial de la obra social.</p>`;
     } else {
       const g = r.g;
       c = `<h2>¿A nombre de quién?</h2>
-      <div class="hint"><b>${esc(fechaLarga(r.fecha))}, ${r.hora} h</b> · ${esc(r.motivo)}</div>
+      <div class="hint"><b>${esc(fechaLarga(r.fecha))}, ${conH(r.hora, P)}</b> · ${esc(r.motivo)}</div>
       <label for="g-chico">Nombre y apellido del chico o chica</label><input id="g-chico" value="${esc(g.chico)}">
       <div class="grid2"><div><label for="g-dni">DNI del chico</label><input id="g-dni" inputmode="numeric" value="${esc(g.dni)}"></div><div><label for="g-nac">Nacimiento</label><input id="g-nac" type="date" max="${t.HOY}" value="${esc(g.nac)}"></div></div>
       <label for="g-obra">Obra social</label><select id="g-obra"><option value="">Elegí una</option>${(P.obras || []).map(o => `<option${g.obra === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>
@@ -119,7 +124,7 @@ const V = {
     const quien = S.ultima.map(t => nombreCorto(t.paciente.nombre)).join(' y ');
     const cal = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('Turno ' + String(P.especialidad || '').toLowerCase() + ': ' + quien) + '&dates=' + fx(t0.fecha, t0.hora) + '/' + fx(tN.fecha, fin) + '&ctz=America/Argentina/Mendoza&location=' + encodeURIComponent(P.direccion || '') + '&details=' + encodeURIComponent(P.nombre + ' · ' + t0.motivo);
     return `${cabecera()}<div class="card"><h2>¡Listo, ${S.ultima.length > 1 ? 'turnos reservados' : 'turno reservado'}!</h2>
-      <div class="list">${S.ultima.map(t => `<div class="item"><span class="time">${t.hora}</span><div class="grow"><b>${esc(nombreCorto(t.paciente.nombre))}</b><p class="small muted">${esc(fechaLarga(t.fecha))} · ${esc(t.motivo)}</p></div><span class="pill ok">Confirmado</span></div>`).join('')}</div>
+      <div class="list">${S.ultima.map(t => `<div class="item"><span class="time">${fmtHora(t.hora, P)}</span><div class="grow"><b>${esc(nombreCorto(t.paciente.nombre))}</b><p class="small muted">${esc(fechaLarga(t.fecha))} · ${esc(t.motivo)}</p></div><span class="pill ok">Confirmado</span></div>`).join('')}</div>
       <div class="grid2">${P.direccion ? `<a class="btn" href="${maps}" target="_blank" rel="noopener">Cómo llegar</a>` : ''}<a class="btn" href="${cal}" target="_blank" rel="noopener">Agendar en mi celular</a></div>
       <p class="small muted">Si no podés ir, cancelalo desde "Mis turnos" así el horario queda libre para otra familia.</p>
       <button class="btn pri block" data-a="ir" data-p="inicio">Ver mis turnos</button></div>`;

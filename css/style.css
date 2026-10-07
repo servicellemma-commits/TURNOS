@@ -162,3 +162,14 @@ textarea{min-height:90px;resize:vertical}
 .borrar{background:var(--danger-bg);color:var(--danger);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .band-app .txt{padding-right:0}
 .band-app h2{font-size:19px}
+/* Horarios, recordatorios y avisos de vacaciones */
+.hrow select{width:100%;padding:8px 6px;font-size:14px}
+.hrow.cab{margin-bottom:-6px}
+.chip.formato{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px}
+.chip.formato b{font-size:17px}
+.recs{background:var(--warn-bg);border-color:transparent;color:var(--warn)}
+.recs h3{color:var(--warn)}
+.recs .rec{padding:6px 0;border-top:1px solid color-mix(in srgb,var(--warn) 25%,transparent);font-size:14px}
+.recs .btn.link{color:var(--warn);font-weight:700;padding:0}
+.recs .btn.sm{background:var(--surface);color:var(--fg)}
+.cartel{font-size:14px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--fg);border-radius:10px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}

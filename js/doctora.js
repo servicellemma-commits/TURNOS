@@ -4,10 +4,11 @@ import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider,
 import { ADMINS, PLATAFORMA } from './firebase-config.js';
 import { abrirRecorte } from './recorte.js';
 import { esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
-  slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, achicarImagen, sinConfig, configNueva } from './common.js';
+  slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
+  fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js';
 
 const app = document.getElementById('app');
-const S = { user: null, cargando: true, slug: null, P: null, turnos: [], pacx: {}, tab: 'agenda', dia: ahora().HOY, dar: {}, ficha: null, copia: null, sec: 'apariencia', err: '', confirmar: null, buscar: '' };
+const S = { user: null, cargando: true, slug: null, P: null, turnos: [], pacx: {}, tab: 'agenda', dia: ahora().HOY, dar: {}, ficha: null, copia: null, sec: 'apariencia', err: '', confirmar: null, buscar: '', hor: null, blq: null, afect: null };
 const esAdmin = () => S.user && ADMINS.map(a => a.toLowerCase()).includes((S.user.email || '').toLowerCase());
 const errHtml = () => S.err ? `<p class="err" role="alert">${esc(S.err)}</p>` : '';
 const top = () => window.scrollTo(0, 0);
@@ -31,7 +32,7 @@ function pacientes() {
     Object.assign(x, { nombre: t.paciente.nombre, dni: t.paciente.dni || '', nac: x.nac || t.paciente.nac || '', obra: t.paciente.obra || x.obra || '', resp: (t.responsable && t.responsable.nombre) || x.resp || '', contacto: (t.responsable && t.responsable.contacto) || x.contacto || '' });
     x.turnos.push(t); m.set(k, x);
   });
-  for (const [k, x] of m) { const e = S.pacx[k]; if (e) { if (e.nac) x.nac = e.nac; x.afiliado = e.afiliado || ''; x.notas = e.notas || []; } else { x.afiliado = ''; x.notas = []; } }
+  for (const [k, x] of m) { const e = S.pacx[k]; if (e) { if (e.nac) x.nac = e.nac; x.afiliado = e.afiliado || ''; x.notas = e.notas || []; x.recs = e.recordatorios || []; } else { x.afiliado = ''; x.notas = []; x.recs = []; } }
   return [...m.values()];
 }
 
@@ -59,7 +60,7 @@ function crearProfesional() {
 }
 
 function filaTurno(t) {
-  return `<div class="item" style="align-items:flex-start"><span class="time">${t.hora}</span><div class="grow">
+  return `<div class="item" style="align-items:flex-start"><span class="time">${fmtHora(t.hora, S.P)}</span><div class="grow">
     <button class="btn link" data-a="verFicha" data-k="${esc(claveP(t))}" style="font-size:15px">${esc(t.paciente.nombre)}</button> · ${esc(edad(t.paciente.nac))}
     <p class="small muted">${esc(t.motivo)} · ${esc(t.paciente.obra || 'Sin obra social')}${t.origen === 'manual' ? ' · cargado por vos' : ''}</p>
     ${t.responsable && (t.responsable.nombre || t.responsable.contacto) ? `<p class="small muted">${esc(t.responsable.nombre)}${t.responsable.contacto ? ' · <span class="wa">' + esc(t.responsable.contacto) + '</span>' : ''}</p>` : ''}
@@ -72,12 +73,15 @@ const PRO = {
     const P = S.P, slots = slotsFor(P, S.dia, turnoEn, true), ocup = slots.filter(s => s.t).length, H = ahora().HOY;
     const canc = S.turnos.filter(t => t.fecha === S.dia && t.estado === 'cancelado');
     const dias = proximos(21).filter(k => slotsFor(P, k, turnoEn, true).length || k === S.dia).slice(0, 8);
-    return `<div class="card"><div class="days">${dias.map(k => { const d = parseKey(k), c = slotsFor(P, k, turnoEn, true).filter(s => s.t).length; return `<button class="chip${S.dia === k ? ' sel' : ''}" data-a="dia" data-k="${k}">${k === H ? 'Hoy' : DOWS[d.getDay()]}<b>${d.getDate()}</b><span class="small">${c ? c + ' turnos' : 'libre'}</span></button>`; }).join('')}</div>
+    const recs = []; pacientes().forEach(x => x.recs.forEach(r => { if (!r.hecho && r.fecha <= H) recs.push({ ...r, clave: x.clave, nombre: x.nombre }); }));
+    recs.sort((a, b) => a.fecha.localeCompare(b.fecha));
+    return `${recs.length ? `<div class="card recs"><h3>Recordatorios de hoy (${recs.length})</h3>${recs.map(r => `<div class="row between rec"><div class="grow"><button class="btn link" data-a="verFicha" data-k="${esc(r.clave)}">${esc(nombreCorto(r.nombre))}</button> · ${esc(r.texto)}${r.fecha < H ? `<p class="small">Desde el ${fechaCorta(r.fecha)}</p>` : ''}</div><button class="btn sm" data-a="recListo" data-k="${esc(r.clave)}" data-id="${r.id}">Listo</button></div>`).join('')}</div>` : ''}
+    <div class="card"><div class="days">${dias.map(k => { const d = parseKey(k), c = slotsFor(P, k, turnoEn, true).filter(s => s.t).length; return `<button class="chip${S.dia === k ? ' sel' : ''}" data-a="dia" data-k="${k}">${k === H ? 'Hoy' : DOWS[d.getDay()]}<b>${d.getDate()}</b><span class="small">${c ? c + ' turnos' : 'libre'}</span></button>`; }).join('')}</div>
       <div class="stats"><div class="stat"><span class="small muted">Turnos</span><b>${ocup}</b></div><div class="stat"><span class="small muted">Libres</span><b>${slots.length - ocup}</b></div></div>
       <button class="btn pri block" data-a="irDar">+ Dar turno a mano</button></div>
     <div class="card"><h3>${esc(fechaLarga(S.dia))}</h3>
-      ${slots.length ? `<div class="list">${slots.map(s => s.t ? filaTurno(s.t) : `<div class="item"><span class="time">${s.hora}</span><div class="grow muted small">Libre</div><button class="btn sm" data-a="darEn" data-h="${s.hora}">Dar</button></div>`).join('')}</div>` : `<p class="muted">Este día no atendés${(P.bloqueos || []).some(b => b.fecha === S.dia) ? ' (día bloqueado)' : ''}.</p>`}
-      ${canc.length ? `<p class="small muted">Cancelados: ${canc.map(t => esc(nombreCorto(t.paciente.nombre)) + ' (' + t.hora + ')').join(', ')}</p>` : ''}</div>
+      ${slots.length ? `<div class="list">${slots.map(s => s.t ? filaTurno(s.t) : `<div class="item"><span class="time">${fmtHora(s.hora, P)}</span><div class="grow muted small">Libre</div><button class="btn sm" data-a="darEn" data-h="${s.hora}">Dar</button></div>`).join('')}</div>` : `<p class="muted">Este día no atendés${bloqueoDe(P, S.dia) ? ' (' + esc((bloqueoDe(P, S.dia).motivo || 'día bloqueado').toLowerCase()) + ')' : ''}.</p>`}
+      ${canc.length ? `<p class="small muted">Cancelados: ${canc.map(t => esc(nombreCorto(t.paciente.nombre)) + ' (' + fmtHora(t.hora, P) + ')').join(', ')}</p>` : ''}</div>
     <div class="card"><h3>Tu link para las familias</h3><p class="wa small" style="word-break:break-all">${esc(linkPublico())}</p><button class="btn" data-a="copiarLink">Copiar link</button></div>`;
   },
 
@@ -87,7 +91,7 @@ const PRO = {
     const libres = d.fecha ? slotsFor(P, d.fecha, turnoEn).filter(s => !s.t) : [];
     return `<div class="card"><h2>Dar turno</h2><p class="small muted">Para cuando te llaman por teléfono. Si el chico ya es paciente, escribí su DNI y se completa solo.</p>
       <div class="days">${dias.slice(0, 8).map(k => { const x = parseKey(k); return `<button class="chip${d.fecha === k ? ' sel' : ''}" data-a="darDia" data-k="${k}">${k === ahora().HOY ? 'Hoy' : DOWS[x.getDay()]}<b>${x.getDate()}</b><span class="small">${slotsFor(P, k, turnoEn).filter(s => !s.t).length} libres</span></button>`; }).join('')}</div>
-      ${d.fecha ? `<p class="franja">${esc(fechaLarga(d.fecha))}</p><div class="slots">${libres.map(s => `<button class="chip${d.hora === s.hora ? ' sel' : ''}" data-a="darHora" data-h="${s.hora}">${s.hora}</button>`).join('')}</div>` : '<p class="muted">No hay horarios libres.</p>'}
+      ${d.fecha ? `<p class="franja">${esc(fechaLarga(d.fecha))}</p><div class="slots">${libres.map(s => `<button class="chip${d.hora === s.hora ? ' sel' : ''}" data-a="darHora" data-h="${s.hora}">${fmtHora(s.hora, P)}</button>`).join('')}</div>` : '<p class="muted">No hay horarios libres.</p>'}
       <div class="grid2"><div><label for="d-dni">DNI del chico</label><input id="d-dni" inputmode="numeric" value="${esc(d.dni)}" data-c="darDni"></div><div><label for="d-mot">Motivo</label><select id="d-mot">${(P.motivos || []).map(m => `<option${d.motivo === m ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></div></div>
       <label for="d-nom">Nombre del chico o chica</label><input id="d-nom" value="${esc(d.nombre)}">
       <div class="grid2"><div><label for="d-tel">Teléfono de la familia</label><input id="d-tel" inputmode="tel" value="${esc(d.tel)}"></div><div><label for="d-obra">Obra social</label><select id="d-obra"><option value="">Sin cargar</option>${(P.obras || []).map(o => `<option${d.obra === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select></div></div>
@@ -103,19 +107,29 @@ const PRO = {
   },
 
   horarios() {
-    const P = S.P;
-    return `<div class="card"><h3>Días y horarios de atención</h3><p class="small muted">Lo que cambies acá se ve al instante en tu página.</p>
-      ${[1, 2, 3, 4, 5, 6, 0].map(d => { const h = P.horarios[d]; return `<div class="hrow"><label class="chk" for="hd-${d}"><input type="checkbox" id="hd-${d}" data-c="hOn" data-d="${d}" ${h.on ? 'checked' : ''}>${DOWS[d]}</label>
-        <input type="time" id="hdes-${d}" aria-label="${DOW[d]} desde" value="${h.desde}" data-c="hDesde" data-d="${d}" ${h.on ? '' : 'disabled'}><input type="time" id="hhas-${d}" aria-label="${DOW[d]} hasta" value="${h.hasta}" data-c="hHasta" data-d="${d}" ${h.on ? '' : 'disabled'}></div>`; }).join('')}
-      <label for="dur">Duración de cada turno</label><select id="dur" data-c="dur">${[10, 15, 20, 30, 40, 60].map(m => `<option value="${m}"${P.duracion === m ? ' selected' : ''}>${m} minutos</option>`).join('')}</select></div>`;
+    const P = S.P, hb = borradorHor(), cambio = JSON.stringify(hb.h) !== JSON.stringify(P.horarios) || hb.dur !== P.duracion;
+    return `<div class="card"><h3>Formato de hora</h3><div class="grid2"><button class="chip formato${P.formatoHora !== '12' ? ' sel' : ''}" data-a="formato" data-f="24"><b>16:30</b><span class="small">24 horas</span></button><button class="chip formato${P.formatoHora === '12' ? ' sel' : ''}" data-a="formato" data-f="12"><b>4:30 PM</b><span class="small">AM / PM</span></button></div></div>
+    <div class="card"><h3>Días y horarios de atención</h3><p class="small muted">Cambiá lo que quieras y tocá <b>Guardar horarios</b> al final.</p>
+      <div class="hrow cab"><span></span><span class="small muted">Desde</span><span class="small muted">Hasta</span></div>
+      ${[1, 2, 3, 4, 5, 6, 0].map(d => { const h = hb.h[d]; return `<div class="hrow"><label class="chk" for="hd-${d}"><input type="checkbox" id="hd-${d}" data-c="hOn" data-d="${d}" ${h.on ? 'checked' : ''}>${DOWS[d]}</label>
+        ${h.on ? `<select id="hdes-${d}" aria-label="${DOW[d]} desde" data-c="hDesde" data-d="${d}">${opcionesHora(h.desde, P)}</select><select id="hhas-${d}" aria-label="${DOW[d]} hasta" data-c="hHasta" data-d="${d}">${opcionesHora(h.hasta, P)}</select>` : `<span class="small muted" style="grid-column:span 2">No atiende</span>`}</div>`; }).join('')}
+      <label for="dur">Duración de cada turno</label><select id="dur" data-c="dur">${[10, 15, 20, 30, 40, 60].map(m => `<option value="${m}"${hb.dur === m ? ' selected' : ''}>${m} minutos</option>`).join('')}</select>
+      ${errHtml()}<button class="btn pri block" data-a="guardarHorarios">${cambio ? 'Guardar horarios' : 'Horarios guardados'}</button>
+      ${cambio ? `<button class="btn link" data-a="descartarHorarios">Descartar cambios</button>` : ''}</div>`;
   },
 
   bloqueos() {
-    const l = [...(S.P.bloqueos || [])].sort((a, b) => a.fecha.localeCompare(b.fecha));
-    return `<div class="card"><h3>Bloquear un día</h3><p class="small muted">Vacaciones, congresos o feriados. Ese día no aparece para sacar turno.</p>
-      <div class="grid2"><div><label for="b-f">Día</label><input type="date" id="b-f" min="${ahora().HOY}"></div><div><label for="b-m">Motivo (opcional)</label><input id="b-m" placeholder="Vacaciones"></div></div>
-      ${errHtml()}<button class="btn pri" data-a="bloquear">Bloquear día</button></div>
-    <div class="card"><h3>Días bloqueados</h3>${l.length ? `<div class="list">${l.map(b => `<div class="item"><div class="grow"><b>${esc(fechaLarga(b.fecha))}</b>${b.motivo ? `<p class="small muted">${esc(b.motivo)}</p>` : ''}</div><button class="btn sm" data-a="desbloquear" data-f="${b.fecha}">Quitar</button></div>`).join('')}</div>` : `<p class="muted small">No hay días bloqueados.</p>`}</div>`;
+    const P = S.P, b = S.blq || (S.blq = { desde: '', hasta: '', motivo: 'Vacaciones', otro: '', aviso: 5 }), H = ahora().HOY;
+    const l = (P.bloqueos || []).map((x, i) => ({ ...x, i })).filter(x => hastaDe(x) >= H).sort((a, c) => desdeDe(a).localeCompare(desdeDe(c)));
+    return `${S.afect && S.afect.length ? `<div class="card recs"><h3>Hay ${S.afect.length} turno${S.afect.length > 1 ? 's' : ''} dado${S.afect.length > 1 ? 's' : ''} en esos días</h3>${S.afect.map(t => `<div class="row between rec"><span>${esc(DOWS[parseKey(t.fecha).getDay()])} ${parseKey(t.fecha).getDate()} · ${fmtHora(t.hora, P)} · ${esc(nombreCorto(t.paciente.nombre))}</span><span class="wa">${esc((t.responsable && t.responsable.contacto) || 'sin teléfono')}</span></div>`).join('')}<p class="small">Avisales para reprogramar. Podés cancelarlos desde la Agenda.</p><button class="btn sm" data-a="cerrarAfect">Entendido</button></div>` : ''}
+    <div class="card"><h3>Bloquear días</h3><p class="small muted">Vacaciones, congresos o feriados. Esos días no aparecen para sacar turno.</p>
+      <div class="grid2"><div><label for="b-desde">Desde</label><input type="date" id="b-desde" min="${H}" value="${esc(b.desde)}"></div><div><label for="b-hasta">Hasta</label><input type="date" id="b-hasta" min="${esc(b.desde || H)}" value="${esc(b.hasta)}"></div></div>
+      <p class="small muted">Si es un solo día, dejá "Hasta" vacío.</p>
+      <div><p class="small muted" style="margin-bottom:6px">Motivo</p><div class="chips">${['Vacaciones', 'Congreso', 'Feriado', 'Otro'].map(m => `<button class="chip${b.motivo === m ? ' sel' : ''}" data-a="blqMotivo" data-m="${m}">${m}</button>`).join('')}</div></div>
+      ${b.motivo === 'Otro' ? `<label for="b-otro">Escribí el motivo</label><input id="b-otro" value="${esc(b.otro)}" placeholder="Licencia, capacitación…">` : ''}
+      <div class="row between"><span>Avisar en mi página</span><span class="row"><button class="btn sm" data-a="blqAviso" data-n="-1" aria-label="Menos días">−</button><b>${b.aviso}</b><button class="btn sm" data-a="blqAviso" data-n="1" aria-label="Más días">+</button><span class="small">días antes</span></span></div>
+      ${errHtml()}<button class="btn pri block" data-a="bloquear">Bloquear</button></div>
+    <div class="card"><h3>Días bloqueados</h3>${l.length ? `<div class="list">${l.map(x => `<div class="item"><div class="grow"><b>${esc(x.motivo || 'Bloqueado')}</b><p class="small muted">${esc(textoPeriodo(x))}</p>${x.avisoDias ? `<p class="small muted">Se avisa en tu página desde el ${fechaCorta(sumarDias(desdeDe(x), -x.avisoDias))}</p>` : ''}</div><button class="btn sm" data-a="desbloquear" data-i="${x.i}">Quitar</button></div>`).join('')}</div>` : `<p class="muted small">No hay días bloqueados.</p>`}</div>`;
   },
 
   config() {
@@ -160,11 +174,16 @@ function ficha() {
     <button class="btn pri block" data-a="copiar">Copiar datos para la receta</button>
     ${S.copia ? `<p class="small muted">Tu celular no dejó copiar solo. Mantené apretado el texto para copiarlo:</p><div class="copybox">${esc(S.copia)}</div>` : ''}
     <p class="small muted">Pegalos en la plataforma de recetas electrónicas que usás.</p></div>
+  <div class="card"><h3>Recordatorios</h3>
+    <div class="grid2"><div><label for="r-f">Fecha</label><input type="date" id="r-f" min="${ahora().HOY}" value="${esc(S.recF || '')}"></div><div><label for="r-t">Qué recordar</label><input id="r-t" placeholder="Control de peso"></div></div>
+    <div class="chips">${[['1 mes', 1], ['3 meses', 3], ['6 meses', 6], ['1 año', 12]].map(([l, m]) => `<button class="chip" data-a="recEn" data-m="${m}">En ${l}</button>`).join('')}</div>
+    <button class="btn" data-a="recAgregar">Agregar recordatorio</button>
+    ${x.recs.length ? `<div class="list">${[...x.recs].sort((a, b) => a.fecha.localeCompare(b.fecha)).map(r => `<div class="item"><div class="grow${r.hecho ? ' muted' : ''}"><b>${fechaCorta(r.fecha)}</b> · ${esc(r.texto)}${r.hecho ? ' · listo' : ''}</div>${r.hecho ? '' : `<button class="btn sm" data-a="recListo" data-k="${esc(x.clave)}" data-id="${r.id}">Listo</button>`}<button class="btn sm danger" data-a="recBorrar" data-id="${r.id}" aria-label="Borrar recordatorio">Borrar</button></div>`).join('')}</div>` : '<p class="muted small">Sin recordatorios. El día que elijas, aparece arriba en la Agenda.</p>'}</div>
   <div class="card"><h3>Notas y pedidos</h3>
     <label for="fa-nota">Nueva nota</label><textarea id="fa-nota" style="min-height:70px" placeholder="Pedido de hemograma, control de peso…"></textarea>
     ${errHtml()}<button class="btn" data-a="agregarNota">Agregar nota</button>
     ${x.notas.length ? x.notas.map(n => `<p class="nota"><span>${fechaCorta(n.fecha)}</span><br>${esc(n.texto)}</p>`).join('') : '<p class="muted small">Sin notas todavía.</p>'}</div>
-  <div class="card"><h3>Turnos</h3><div class="list">${ts.map(t => `<div class="item"><div class="grow">${esc(fechaLarga(t.fecha))}, ${t.hora} h<p class="small muted">${esc(t.motivo)}</p></div><span class="pill ${t.estado === 'cancelado' ? 'warn' : t.estado === 'atendido' ? 'ok' : 'free'}">${t.estado === 'cancelado' ? 'Cancelado' : t.estado === 'atendido' ? 'Atendido' : 'Pendiente'}</span></div>`).join('')}</div></div>
+  <div class="card"><h3>Turnos</h3><div class="list">${ts.map(t => `<div class="item"><div class="grow">${esc(fechaLarga(t.fecha))}, ${conH(t.hora, S.P)}<p class="small muted">${esc(t.motivo)}</p></div><span class="pill ${t.estado === 'cancelado' ? 'warn' : t.estado === 'atendido' ? 'ok' : 'free'}">${t.estado === 'cancelado' ? 'Cancelado' : t.estado === 'atendido' ? 'Atendido' : 'Pendiente'}</span></div>`).join('')}</div></div>
   <div class="card">${S.borrar === x.clave ? `<div class="borrar"><b>¿Eliminar a ${esc(nombreCorto(x.nombre))}?</b><p class="small">Se borran su ficha, notas e historial de turnos.${x.turnos.some(t => t.estado === 'activo') ? ' Sus turnos pendientes se cancelan y el horario queda libre.' : ''} No se puede deshacer.</p><div class="grid2"><button class="btn" data-a="noBorrar">No, volver</button><button class="btn rojo" data-a="eliminarPaciente" ${S.enviando ? 'disabled' : ''}>${S.enviando ? 'Eliminando…' : 'Sí, eliminar'}</button></div></div>` : `<button class="btn block danger borde-rojo" data-a="pregBorrar">Eliminar paciente</button>`}</div>`;
 }
 
@@ -175,6 +194,8 @@ function render() {
   if (foco !== null) { const b = document.getElementById('buscar'); if (b) { b.focus(); try { b.setSelectionRange(foco, foco); } catch (_) {} } }
 }
 const val = id => (document.getElementById(id)?.value || '').trim();
+function borradorHor() { if (!S.hor) S.hor = { h: JSON.parse(JSON.stringify(S.P.horarios)), dur: S.P.duracion }; return S.hor; }
+function leerBlq() { const b = S.blq; if (!b || !document.getElementById('b-desde')) return; b.desde = val('b-desde'); b.hasta = val('b-hasta'); if (document.getElementById('b-otro')) b.otro = val('b-otro'); }
 function borradorDar() { const d = S.dar; if (document.getElementById('d-nom')) { d.nombre = val('d-nom'); d.dni = soloNum(val('d-dni')); d.tel = val('d-tel'); d.motivo = val('d-mot'); d.obra = val('d-obra'); } }
 
 const A = {
@@ -201,7 +222,7 @@ const A = {
     try { await setDoc(doc(db, 'profesionales', slug), P); toast('Profesional creado'); buscarConsultorio(); }
     catch (e) { console.error(e); S.err = 'No se pudo crear. ¿Ya existe ese link? ¿Tu mail está en las reglas como administrador?'; render(); }
   },
-  tab: d => { if (S.tab === d.t && !S.ficha) return; S.tab = d.t; S.err = ''; S.confirmar = null; S.ficha = null; S.copia = null; marcar(); render(); },
+  tab: d => { if (S.tab === d.t && !S.ficha) return; S.tab = d.t; S.hor = null; S.blq = null; S.afect = null; S.err = ''; S.confirmar = null; S.ficha = null; S.copia = null; marcar(); render(); },
   dia: d => { S.dia = d.k; S.confirmar = null; render(); },
   pregCancelar: d => { S.confirmar = d.id; render(); },
   noCancelar: () => { S.confirmar = null; render(); },
@@ -230,7 +251,7 @@ const A = {
         responsable: { nombre: prev ? prev.resp : '', contacto: d.tel || (prev ? prev.contacto : '') }, creado: serverTimestamp() });
       b.set(doc(db, 'profesionales', S.slug, 'ocupados', ocupadoId(d.fecha, d.hora)), { fecha: d.fecha, hora: d.hora, turnoId: ref.id });
       await b.commit();
-      toast('Turno guardado: ' + nombreCorto(d.nombre) + ', ' + d.hora + ' h'); S.dia = d.fecha; S.dar = {}; S.enviando = false; S.tab = 'agenda'; history.replaceState({ tab: 'agenda', ficha: null }, ''); render(); top(); top();
+      toast('Turno guardado: ' + nombreCorto(d.nombre) + ', ' + conH(d.hora, S.P)); S.dia = d.fecha; S.dar = {}; S.enviando = false; S.tab = 'agenda'; history.replaceState({ tab: 'agenda', ficha: null }, ''); render(); top(); top();
     } catch (e) { console.error(e); S.enviando = false; S.err = 'No se pudo guardar. Puede que alguien haya tomado ese horario recién.'; render(); }
   },
   verFicha: d => { S.borrar = null; S.ficha = d.k; S.tab = 'pacientes'; S.copia = null; S.err = ''; marcar(); render(); top(); },
@@ -267,14 +288,46 @@ const A = {
     try { await setDoc(doc(db, 'profesionales', S.slug, 'pacientes', S.ficha), { notas: [{ fecha: ahora().HOY, texto: t }, ...x.notas] }, { merge: true }); S.err = ''; toast('Nota agregada'); }
     catch (e) { console.error(e); toast('No se pudo guardar.'); }
   },
-  bloquear: () => {
-    const f = val('b-f'); if (!f) { S.err = 'Elegí el día a bloquear.'; return render(); }
-    const bl = S.P.bloqueos || []; if (bl.some(b => b.fecha === f)) { S.err = 'Ese día ya está bloqueado.'; return render(); }
-    const con = activos().filter(t => t.fecha === f && t.estado === 'activo').length; S.err = '';
-    guardarP({ bloqueos: [...bl, { fecha: f, motivo: val('b-m') }] }, con ? 'Día bloqueado. Tenía ' + con + ' turno(s): avisales a esas familias.' : 'Día bloqueado');
+  formato: d => guardarP({ formatoHora: d.f }, d.f === '12' ? 'Horas en AM / PM' : 'Horas en formato 24 h'),
+  guardarHorarios: async () => {
+    const hb = borradorHor();
+    for (const d of [1, 2, 3, 4, 5, 6, 0]) { const h = hb.h[d]; if (h.on && toMin(h.desde) >= toMin(h.hasta)) { S.err = 'El ' + DOW[d].toLowerCase() + ', la hora de "Hasta" tiene que ser después de "Desde".'; return render(); } }
+    S.err = ''; await guardarP({ horarios: hb.h, duracion: hb.dur }, 'Horarios guardados'); S.hor = null; render();
   },
-  desbloquear: d => guardarP({ bloqueos: (S.P.bloqueos || []).filter(b => b.fecha !== d.f) }),
-  sec: d => { S.sec = d.s; render(); },
+  descartarHorarios: () => { S.hor = null; S.err = ''; render(); },
+  recEn: d => { const f = new Date(); f.setMonth(f.getMonth() + Number(d.m)); S.recF = f.getFullYear() + '-' + String(f.getMonth() + 1).padStart(2, '0') + '-' + String(f.getDate()).padStart(2, '0'); const t = val('r-t'); render(); const el = document.getElementById('r-t'); if (el) el.value = t; },
+  recAgregar: async () => {
+    const f = val('r-f'), t = val('r-t'); if (!f || !t) { S.err = 'Elegí la fecha y escribí qué recordar.'; return render(); }
+    const x = pacientes().find(p => p.clave === S.ficha); S.err = '';
+    try { await setDoc(doc(db, 'profesionales', S.slug, 'pacientes', S.ficha), { recordatorios: [...x.recs, { id: uid(), fecha: f, texto: t, hecho: false }] }, { merge: true }); S.recF = ''; toast('Recordatorio para el ' + fechaCorta(f)); }
+    catch (e) { console.error(e); toast('No se pudo guardar.'); }
+  },
+  recListo: async d => {
+    const x = pacientes().find(p => p.clave === d.k); if (!x) return;
+    try { await setDoc(doc(db, 'profesionales', S.slug, 'pacientes', d.k), { recordatorios: x.recs.map(r => r.id === d.id ? { ...r, hecho: true } : r) }, { merge: true }); toast('Listo'); }
+    catch (e) { console.error(e); toast('No se pudo guardar.'); }
+  },
+  recBorrar: async d => {
+    const x = pacientes().find(p => p.clave === S.ficha); if (!x) return;
+    try { await setDoc(doc(db, 'profesionales', S.slug, 'pacientes', S.ficha), { recordatorios: x.recs.filter(r => r.id !== d.id) }, { merge: true }); toast('Recordatorio borrado'); }
+    catch (e) { console.error(e); toast('No se pudo borrar.'); }
+  },
+  blqMotivo: d => { leerBlq(); S.blq.motivo = d.m; render(); },
+  blqAviso: d => { leerBlq(); S.blq.aviso = Math.max(0, Math.min(30, S.blq.aviso + Number(d.n))); render(); },
+  cerrarAfect: () => { S.afect = null; render(); },
+  bloquear: async () => {
+    leerBlq(); const b = S.blq, hasta = b.hasta || b.desde;
+    if (!b.desde) { S.err = 'Elegí desde qué día.'; return render(); }
+    if (hasta < b.desde) { S.err = '"Hasta" tiene que ser el mismo día o después de "Desde".'; return render(); }
+    const motivo = b.motivo === 'Otro' ? (b.otro || 'Otro') : b.motivo;
+    const pis = (S.P.bloqueos || []).find(x => desdeDe(x) <= hasta && b.desde <= hastaDe(x));
+    if (pis) { S.err = 'Esos días se superponen con otro bloqueo (' + textoPeriodo(pis) + ').'; return render(); }
+    S.err = ''; S.afect = activos().filter(t => t.estado === 'activo' && t.fecha >= b.desde && t.fecha <= hasta).sort((a, c) => (a.fecha + a.hora).localeCompare(c.fecha + c.hora));
+    await guardarP({ bloqueos: [...(S.P.bloqueos || []), { desde: b.desde, hasta, motivo, avisoDias: b.aviso }] }, 'Días bloqueados');
+    S.blq = null; render(); top();
+  },
+  desbloquear: d => guardarP({ bloqueos: (S.P.bloqueos || []).filter((b, i) => i !== Number(d.i)) }, 'Días desbloqueados'),
+  sec: d => { S.sec = d.s; S.hor = null; S.err = ''; render(); },
   tema: d => guardarP({ tema: d.t, colorPropio: '' }, 'Tema ' + TEMAS[d.t].nombre + ' aplicado'),
   colorTema: () => guardarP({ colorPropio: '' }),
   quitarLogo: () => guardarP({ logo: '' }, 'Logo quitado'),
@@ -289,13 +342,13 @@ document.addEventListener('click', e => { const el = e.target.closest('[data-a]'
 document.addEventListener('input', e => { if (e.target.id === 'buscar') { S.buscar = e.target.value; render(); } });
 document.addEventListener('change', async e => {
   const el = e.target, c = el.dataset && el.dataset.c; if (!c || !S.P) return; const P = S.P;
-  if (c === 'hOn' || c === 'hDesde' || c === 'hHasta') {
-    const h = JSON.parse(JSON.stringify(P.horarios)), d = el.dataset.d;
-    if (c === 'hOn') h[d].on = el.checked; else if (el.value) h[d][c === 'hDesde' ? 'desde' : 'hasta'] = el.value;
-    if (toMin(h[d].desde) >= toMin(h[d].hasta)) { toast('El horario de cierre tiene que ser después del de inicio'); return render(); }
-    return guardarP({ horarios: h });
+  if (c === 'hOn' || c === 'hDesde' || c === 'hHasta' || c === 'dur') {
+    const hb = borradorHor(), d = el.dataset.d;
+    if (c === 'hOn') hb.h[d].on = el.checked;
+    else if (c === 'dur') hb.dur = Number(el.value);
+    else hb.h[d][c === 'hDesde' ? 'desde' : 'hasta'] = el.value;
+    S.err = ''; return render();
   }
-  if (c === 'dur') return guardarP({ duracion: Number(el.value) }, 'Turnos de ' + el.value + ' minutos');
   if (c === 'dibujos') return guardarP({ dibujos: el.checked });
   if (c === 'color') return guardarP({ colorPropio: el.value });
   if (c === 'logo' && el.files && el.files[0]) { const f = el.files[0]; el.value = ''; const r = new FileReader(); r.onload = () => recortar(r.result); r.onerror = () => toast('No se pudo leer la imagen'); r.readAsDataURL(f); return; }

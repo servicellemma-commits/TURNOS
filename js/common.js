@@ -34,7 +34,7 @@ export const uid = () => Math.random().toString(36).slice(2, 10);
 // ocupado(fecha, hora) -> devuelve el turno (o true) si está tomado
 export function slotsFor(P, fecha, ocupado, pasados) {
   const t = ahora(), d = parseKey(fecha), h = P.horarios[d.getDay()];
-  if (!h || !h.on || (P.bloqueos || []).some(b => b.fecha === fecha)) return [];
+  if (!h || !h.on || bloqueoDe(P, fecha)) return [];
   const out = [];
   for (let m = toMin(h.desde); m + P.duracion <= toMin(h.hasta); m += P.duracion) {
     if (!pasados && fecha === t.HOY && m <= t.min) continue;
@@ -54,8 +54,36 @@ export function tramo(P, fecha, hora, n, ocupado) {
 }
 export function textoHorarios(P) {
   const h = P.horarios;
-  const l = [1, 2, 3, 4, 5, 6, 0].filter(d => h[d] && h[d].on).map(d => DOW[d] + ' de ' + h[d].desde + ' a ' + h[d].hasta + ' h');
+  const l = [1, 2, 3, 4, 5, 6, 0].filter(d => h[d] && h[d].on).map(d => DOW[d] + ' de ' + fmtHora(h[d].desde, P) + ' a ' + conH(h[d].hasta, P));
   return l.length > 1 ? l.slice(0, -1).join(', ') + ' y ' + l[l.length - 1] : (l[0] || '');
+}
+
+/* ---------- Formato de hora: 24 h (16:30) o AM/PM (4:30 PM) ---------- */
+export function fmtHora(h, P) {
+  if (!h || !P || P.formatoHora !== '12') return h;
+  const m = toMin(h), hh = Math.floor(m / 60) % 24, mm = m % 60;
+  return ((hh % 12) || 12) + ':' + pad(mm) + ' ' + (hh < 12 ? 'AM' : 'PM');
+}
+export const conH = (h, P) => P && P.formatoHora === '12' ? fmtHora(h, P) : h + ' h';
+export function opcionesHora(sel, P) {
+  let o = ''; for (let m = 6 * 60; m <= 23 * 60 + 55; m += 5) { const h = fromMin(m); o += `<option value="${h}"${h === sel ? ' selected' : ''}>${fmtHora(h, P)}</option>`; }
+  return o;
+}
+
+/* ---------- Días bloqueados (un día suelto o un período) ---------- */
+export const desdeDe = b => b.desde || b.fecha;
+export const hastaDe = b => b.hasta || b.fecha;
+export const bloqueoDe = (P, fecha) => (P.bloqueos || []).find(b => desdeDe(b) <= fecha && fecha <= hastaDe(b));
+export function sumarDias(k, n) { const d = parseKey(k); d.setDate(d.getDate() + n); return keyOf(d); }
+// Períodos que la página tiene que anunciar hoy (desde X días antes hasta que terminan)
+export function avisosVigentes(P) {
+  const H = ahora().HOY;
+  return (P.bloqueos || []).filter(b => hastaDe(b) >= H && sumarDias(desdeDe(b), -(Number(b.avisoDias) || 0)) <= H)
+    .sort((a, b) => desdeDe(a).localeCompare(desdeDe(b)));
+}
+export function textoPeriodo(b) {
+  const d = desdeDe(b), h = hastaDe(b);
+  return d === h ? 'el ' + fechaLarga(d).toLowerCase() : 'del ' + fechaLarga(d).toLowerCase() + ' al ' + fechaLarga(h).toLowerCase();
 }
 
 /* ---------- Configuración inicial de un profesional nuevo ---------- */
