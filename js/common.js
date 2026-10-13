@@ -161,7 +161,7 @@ export function iconoAuto(m) {
   return 'estetoscopio';
 }
 export const icono = (m, P) => iconoSvg((P && P.motivosIcono && P.motivosIcono[m]) || iconoAuto(m));
-export const urgenciaDefecto = P => 'Si tiene fiebre alta, le cuesta respirar o es urgente, no esperes al turno: ' + (P.telefono ? 'llamá al ' + P.telefono + ' o ' : '') + 'andá a la guardia.';
+export const urgenciaDefecto = P => (P.tipo === 'general' ? 'Si es una urgencia, no esperes al turno: ' : 'Si tiene fiebre alta, le cuesta respirar o es urgente, no esperes al turno: ') + (P.telefono ? 'llamá al ' + P.telefono + ' o ' : '') + 'andá a la guardia.';
 export const textoUrgencia = P => P.urgencia === undefined ? urgenciaDefecto(P) : P.urgencia;
 
 /* ---------- Avisos cortos ---------- */
@@ -198,3 +198,34 @@ export function textos(P) {
     elegir: 'Tocá el nombre de tu hijo o hija para seguir.', dniMal: 'Revisá el DNI del chico: tiene que tener 7 u 8 números.', libre: 'para otra familia', nombreCorto: 'del chico'
   };
 }
+
+/* ---------- Modelos de especialidad: motivos y recomendaciones para empezar ---------- */
+const DOC = 'Llegá 10 minutos antes con tu DNI y la credencial de la obra social.';
+export const ESPECIALIDADES = {
+  pediatria: { nombre: 'Pediatría', tipo: 'pediatria', motivos: ['Control', 'Vacunas', 'Está enfermo', 'Certificado'],
+    recs: ['Llegá 10 minutos antes con el DNI y la credencial de la obra social.', 'Traé el carnet de vacunación y el último control.', 'Si tiene fiebre alta o dificultad para respirar, no esperes el turno: andá a una guardia.'] },
+  clinica: { nombre: 'Clínica médica', tipo: 'general', motivos: ['Control general', 'Consulta', 'Certificado', 'Renovación de receta', 'Resultados de estudios'],
+    recs: [DOC, 'Traé tus estudios y la lista de los medicamentos que tomás.', 'Si no podés venir, cancelá el turno para que lo use otra persona.'] },
+  odontologia: { nombre: 'Odontología', tipo: 'general', motivos: ['Consulta', 'Limpieza', 'Dolor de muela', 'Arreglo o caries', 'Control', 'Ortodoncia'],
+    recs: [DOC, 'Si tomás algún medicamento o tenés alguna alergia, avisanos.', 'Si tenés mucho dolor o la cara hinchada, llamanos para ver si te atendemos antes.'] },
+  psicologia: { nombre: 'Psicología', tipo: 'general', motivos: ['Primera consulta', 'Sesión de seguimiento', 'Terapia de pareja', 'Orientación a padres'],
+    recs: ['Conectate o llegá unos minutos antes de la hora.', 'Cancelá o reprogramá con al menos 24 horas de aviso.', 'Si estás en una situación de urgencia, no esperes el turno: pedí ayuda en una guardia.'] },
+  kinesiologia: { nombre: 'Kinesiología', tipo: 'general', motivos: ['Evaluación inicial', 'Sesión de rehabilitación', 'Masaje o descontracturante', 'Control'],
+    recs: [DOC, 'Traé la orden médica y los estudios que tengas.', 'Vení con ropa cómoda.'] },
+  nutricion: { nombre: 'Nutrición', tipo: 'general', motivos: ['Primera consulta', 'Control', 'Plan de alimentación', 'Seguimiento'],
+    recs: [DOC, 'Traé tus análisis recientes si los tenés.', 'Si podés, anotá lo que comés durante tres días antes de venir.'] },
+  dermatologia: { nombre: 'Dermatología', tipo: 'general', motivos: ['Consulta', 'Control de lunares', 'Acné', 'Alergia o erupción', 'Control'],
+    recs: [DOC, 'Vení sin maquillaje ni cremas en la zona a revisar.', 'Traé los estudios y la lista de cremas o medicamentos que usás.'] },
+  ginecologia: { nombre: 'Ginecología', tipo: 'general', motivos: ['Control anual', 'Consulta', 'Embarazo', 'Anticoncepción', 'Resultados de estudios'],
+    recs: [DOC, 'Traé tus estudios anteriores (PAP, ecografías, análisis).', 'Si podés, anotá la fecha de tu última menstruación.'] },
+  oftalmologia: { nombre: 'Oftalmología', tipo: 'general', motivos: ['Control de la vista', 'Receta de anteojos', 'Molestia o dolor en el ojo', 'Control'],
+    recs: [DOC, 'Traé tus anteojos o lentes de contacto actuales.', 'Si te van a dilatar las pupilas, andá acompañado y no manejes.'] },
+  fonoaudiologia: { nombre: 'Fonoaudiología', tipo: 'general', motivos: ['Evaluación', 'Sesión', 'Voz', 'Lenguaje', 'Audición'],
+    recs: [DOC, 'Traé la orden o derivación si la tenés.', 'Cancelá o reprogramá con 24 horas de aviso.'] },
+  cardiologia: { nombre: 'Cardiología', tipo: 'general', motivos: ['Control', 'Primera consulta', 'Electrocardiograma', 'Resultados de estudios', 'Apto físico'],
+    recs: [DOC, 'Traé tus estudios anteriores y la lista de medicamentos.', 'Si tenés dolor en el pecho o falta de aire, no esperes el turno: andá a una guardia.'] },
+  traumatologia: { nombre: 'Traumatología', tipo: 'general', motivos: ['Dolor o lesión', 'Control', 'Resultados de estudios', 'Certificado'],
+    recs: [DOC, 'Traé las radiografías, resonancias y estudios que tengas.', 'Si tuviste un golpe fuerte o no podés apoyar, andá a una guardia.'] },
+  otra: { nombre: 'Otra especialidad', tipo: 'general', motivos: ['Primera consulta', 'Control', 'Consulta'],
+    recs: [DOC, 'Si no podés venir, cancelá el turno para que lo use otra persona.', 'Traé tus estudios anteriores si los tenés.'] }
+};

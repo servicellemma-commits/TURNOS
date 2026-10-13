@@ -93,7 +93,7 @@ const V = {
       const tr = tramo(P, r.fecha, r.hora, n, ocupado) || [];
       c = `<h2>Revisá ${n > 1 ? 'tus turnos' : 'tu turno'}</h2><div class="resumen">${r.hijos.map((id, j) => { const h = hijosFam().find(x => x.id === id); return `<div><span>${esc(nombreCorto(h.nombre))} · ${esc(edad(h.nac))}</span><span>${tr[j] ? conH(tr[j], P) : ''}</span></div>`; }).join('')}
        <div><span>Motivo</span><span>${esc(r.motivo)}</span></div><div><span>Día</span><span>${esc(fechaLarga(r.fecha))}</span></div>${P.direccion ? `<div><span>Dónde</span><span>${esc(P.lugar)}<br>${esc(P.direccion)}</span></div>` : ''}</div>
-      <p class="small muted">Llegá 10 minutos antes con el DNI y la credencial de la obra social.</p>`;
+      ${(P.recomendaciones || []).length ? `<ul class="small muted" style="margin:0;padding-left:18px">${P.recomendaciones.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<p class="small muted">Llegá 10 minutos antes con el DNI y la credencial de la obra social.</p>'}`;
     } else {
       const g = r.g;
       c = `<h2>¿A nombre de quién?</h2>

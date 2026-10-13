@@ -2,7 +2,7 @@
 import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
   doc, setDoc, updateDoc, collection, getDocs } from './fb.js';
 import { ADMINS, PLATAFORMA } from './firebase-config.js';
-import { esc, toast, sinConfig, configNueva, TIPOS, ahora, parseKey, keyOf, fechaCorta } from './common.js';
+import { esc, toast, sinConfig, configNueva, ESPECIALIDADES, ahora, parseKey, keyOf, fechaCorta } from './common.js';
 
 const app = document.getElementById('app');
 const S = { user: null, cargando: true, lista: [], err: '', abierto: null };
@@ -52,7 +52,7 @@ function vista() {
       <label for="n-nom">Nombre como se muestra</label><input id="n-nom" placeholder="Dra. Cintia Chavez">
       <label for="n-slug">Link (sin espacios)</label><input id="n-slug" placeholder="dra-chavez">
       <label for="n-mail">Gmail del profesional</label><input id="n-mail" type="email" placeholder="nombre@gmail.com">
-      <label for="n-tipo">Tipo de consultorio</label><select id="n-tipo">${Object.entries(TIPOS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select>
+      <label for="n-esp">Especialidad</label><select id="n-esp">${Object.entries(ESPECIALIDADES).map(([k, v]) => `<option value="${k}">${esc(v.nombre)}</option>`).join('')}</select>
       ${errHtml()}<button class="btn pri block" data-a="crear">Crear</button></div>`;
 }
 function render() { app.innerHTML = vista() + `<p class="foot">${esc(PLATAFORMA)} · administrador</p>`; }
@@ -66,6 +66,7 @@ async function cambiar(slug, cambios, msg) {
   try { await updateDoc(doc(db, 'profesionales', slug), cambios); toast(msg); await cargar(); }
   catch (e) { console.error(e); toast('No se pudo guardar (' + (e.code || 'error') + ')'); }
 }
+const modeloNuevo = id => { const m = ESPECIALIDADES[id] || ESPECIALIDADES.pediatria; return { tipo: m.tipo, especialidad: id === 'otra' ? '' : m.nombre, motivos: m.motivos, recomendaciones: m.recs }; };
 const de = s => S.lista.find(p => p.slug === s);
 
 const A = {
@@ -85,7 +86,7 @@ const A = {
     const nombre = val('n-nom'), slug = val('n-slug').toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''), mail = val('n-mail').toLowerCase();
     if (!nombre || !slug || !mail.includes('@')) { S.err = 'Completá nombre, link y Gmail.'; return render(); }
     if (de(slug)) { S.err = 'Ya existe un profesional con ese link.'; return render(); }
-    try { await setDoc(doc(db, 'profesionales', slug), { ...configNueva(slug, nombre, mail), tipo: val('n-tipo') || 'pediatria', especialidad: val('n-tipo') === 'general' ? '' : 'Pediatría', estado: 'activo', pagadoHasta: '', notaAdmin: '' }); S.err = ''; toast('Profesional creado'); S.abierto = slug; await cargar(); }
+    try { await setDoc(doc(db, 'profesionales', slug), { ...configNueva(slug, nombre, mail), ...modeloNuevo(val('n-esp')), estado: 'activo', pagadoHasta: '', notaAdmin: '' }); S.err = ''; toast('Profesional creado'); S.abierto = slug; await cargar(); }
     catch (e) { console.error(e); S.err = 'No se pudo crear (' + (e.code || 'error') + ').'; render(); }
   },
   mes: d => {

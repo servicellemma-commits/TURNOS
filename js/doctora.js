@@ -3,7 +3,7 @@ import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider,
   doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js';
 import { ADMINS, PLATAFORMA } from './firebase-config.js';
 import { abrirRecorte } from './recorte.js';
-import { textoHorarios, textos, TIPOS, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
+import { textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
   ICONOS, iconoSvg, iconoAuto, urgenciaDefecto, textoUrgencia,
   fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js';
@@ -158,12 +158,16 @@ const PRO = {
       <label for="c-nom">Nombre</label><input id="c-nom" value="${esc(P.nombre)}">
       <div class="grid2"><div><label for="c-esp">Especialidad</label><input id="c-esp" value="${esc(P.especialidad)}"></div><div><label for="c-lug">Consultorio</label><input id="c-lug" value="${esc(P.lugar)}"></div></div>
       <label for="c-tipo">Tipo de consultorio</label><select id="c-tipo">${Object.entries(TIPOS).map(([k, v]) => `<option value="${k}"${(P.tipo || 'pediatria') === k ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select>
+      <label for="c-modelo">Cargar un modelo de especialidad</label><div class="row"><select id="c-modelo" class="grow">${Object.entries(ESPECIALIDADES).map(([k, v]) => `<option value="${k}">${esc(v.nombre)}</option>`).join('')}</select><button class="btn" data-a="cargarModelo">Cargar</button></div>
+      <p class="small muted">Reemplaza tus motivos de consulta y tus recomendaciones por los del modelo. Después los podés editar.</p>
       <label for="c-dir">Dirección</label><input id="c-dir" value="${esc(P.direccion)}"><label for="c-tel">Teléfono</label><input id="c-tel" value="${esc(P.telefono)}">
       <button class="btn pri block" data-a="guardarInfo">Guardar</button>`;
     else if (S.sec === 'avisos') c = `<h3>Avisos para las familias</h3>
       <label for="c-aviso">Aviso en tu página</label><textarea id="c-aviso" style="min-height:80px">${esc(P.aviso)}</textarea>
       <label for="c-ext">Obra social que saca turno por su propio sistema</label><select id="c-ext"><option value="">Ninguna</option>${(P.obras || []).map(o => `<option${P.obraExterna === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>
       <p class="small muted">Si una familia elige esa obra social, la página le avisa y no la deja reservar.</p>
+      <label for="c-recs">Recomendaciones antes del turno (una por línea)</label><textarea id="c-recs" style="min-height:90px">${esc((P.recomendaciones || []).join('\n'))}</textarea>
+      <p class="small muted">Se ven al confirmar el turno. Si lo dejás vacío, se muestra el aviso de siempre.</p>
       <label for="c-urg">Mensaje de urgencias (se ve al elegir el motivo)</label><textarea id="c-urg" style="min-height:80px">${esc(textoUrgencia(P))}</textarea>
       <div class="row between"><p class="small muted">Si lo dejás vacío, no se muestra.</p><button class="btn sm" data-a="urgOriginal">Texto original</button></div>
       <button class="btn pri block" data-a="guardarAvisos">Guardar</button>`;
@@ -358,8 +362,14 @@ const A = {
   quitarLogo: () => guardarP({ logo: '' }, 'Logo quitado'),
   ajustarLogo: () => recortar(S.P.logo),
   formaLogo: d => guardarP({ logoForma: d.f }, d.f === 'cuadrado' ? 'Logo cuadrado' : 'Logo redondo'),
+  cargarModelo: async () => {
+    const m = ESPECIALIDADES[val('c-modelo')]; if (!m) return;
+    if (!confirm('¿Cargar el modelo de ' + m.nombre + '? Se reemplazan tus motivos de consulta y tus recomendaciones.')) return;
+    S.mot = null; S.motSel = null;
+    await guardarP({ especialidad: m.nombre === 'Otra especialidad' ? S.P.especialidad : m.nombre, tipo: m.tipo, motivos: m.motivos, motivosIcono: Object.fromEntries(m.motivos.map(x => [x, iconoAuto(x)])), recomendaciones: m.recs }, 'Modelo de ' + m.nombre + ' cargado');
+  },
   guardarInfo: () => guardarP({ nombre: val('c-nom') || S.P.nombre, especialidad: val('c-esp'), tipo: val('c-tipo') || 'pediatria', lugar: val('c-lug'), direccion: val('c-dir'), telefono: val('c-tel') }, 'Cambios guardados'),
-  guardarAvisos: () => guardarP({ aviso: val('c-aviso'), obraExterna: val('c-ext'), urgencia: (document.getElementById('c-urg')?.value || '').trim() }, 'Avisos guardados'),
+  guardarAvisos: () => guardarP({ aviso: val('c-aviso'), obraExterna: val('c-ext'), urgencia: (document.getElementById('c-urg')?.value || '').trim(), recomendaciones: (document.getElementById('c-recs')?.value || '').split('\n').map(x => x.trim()).filter(Boolean) }, 'Avisos guardados'),
   urgOriginal: () => { const t = document.getElementById('c-urg'); if (t) t.value = urgenciaDefecto(S.P); toast('Tocá Guardar para aplicarlo'); },
   guardarTurnos: () => { leerMot(); const lines = id => (document.getElementById(id).value || '').split('\n').map(s => s.trim()).filter(Boolean); guardarP({ obras: lines('c-obras'), limite: Number(val('c-lim')) || 1 }, 'Cambios guardados'); },
   motIcono: d => { leerMot(); S.motSel = S.motSel === Number(d.i) ? null : Number(d.i); render(); },
