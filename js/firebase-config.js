@@ -26,4 +26,4 @@ export const ADMINS = ["emmatissera674@gmail.com"];
 export const VERIFICAR_SMS = false;
 
 // Nombre de la plataforma (provisorio)
-export const PLATAFORMA = "Turnos";
+export const PLATAFORMA = "KODA";

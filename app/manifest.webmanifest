@@ -1,6 +1,6 @@
 {
-  "name": "Mi consultorio",
-  "short_name": "Consultorio",
+  "name": "KODA",
+  "short_name": "KODA",
   "description": "Agenda, pacientes y turnos de tu consultorio",
   "start_url": "./",
   "scope": "./",
