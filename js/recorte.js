@@ -33,7 +33,7 @@ function armar(img, forma, nombre, alCerrar) {
 
   const tam = () => ({ w: img.naturalWidth * base * st.zoom, h: img.naturalHeight * base * st.zoom });
   function limitar() { const { w, h } = tam(), mx = Math.max(0, (w - CORTE) / 2), my = Math.max(0, (h - CORTE) / 2); st.x = Math.min(mx, Math.max(-mx, st.x)); st.y = Math.min(my, Math.max(-my, st.y)); }
-  function forma(c, x0, y0, l) { c.beginPath(); if (st.forma === 'cuadrado') { const r = l * 0.22; c.moveTo(x0 + r, y0); c.arcTo(x0 + l, y0, x0 + l, y0 + l, r); c.arcTo(x0 + l, y0 + l, x0, y0 + l, r); c.arcTo(x0, y0 + l, x0, y0, r); c.arcTo(x0, y0, x0 + l, y0, r); c.closePath(); } else c.arc(x0 + l / 2, y0 + l / 2, l / 2, 0, Math.PI * 2); }
+  function trazo(c, x0, y0, l) { c.beginPath(); if (st.forma === 'cuadrado') { const r = l * 0.22; c.moveTo(x0 + r, y0); c.arcTo(x0 + l, y0, x0 + l, y0 + l, r); c.arcTo(x0 + l, y0 + l, x0, y0 + l, r); c.arcTo(x0, y0 + l, x0, y0, r); c.arcTo(x0, y0, x0 + l, y0, r); c.closePath(); } else c.arc(x0 + l / 2, y0 + l / 2, l / 2, 0, Math.PI * 2); }
   let pend = false;
   function dibujar() {
     if (pend) return; pend = true;
@@ -44,8 +44,8 @@ function armar(img, forma, nombre, alCerrar) {
       cx.fillStyle = '#f1f1f1'; cx.fillRect(0, 0, LADO, LADO);
       cx.drawImage(img, LADO / 2 - w / 2 + st.x, LADO / 2 - h / 2 + st.y, w, h);
       const o = (LADO - CORTE) / 2;
-      cx.save(); cx.beginPath(); cx.rect(0, 0, LADO, LADO); forma(cx, o, o, CORTE); cx.fillStyle = 'rgba(0,0,0,.5)'; cx.fill('evenodd'); cx.restore();
-      forma(cx, o, o, CORTE); cx.strokeStyle = '#fff'; cx.lineWidth = 2; cx.stroke();
+      cx.save(); cx.beginPath(); cx.rect(0, 0, LADO, LADO); trazo(cx, o, o, CORTE); cx.fillStyle = 'rgba(0,0,0,.5)'; cx.fill('evenodd'); cx.restore();
+      trazo(cx, o, o, CORTE); cx.strokeStyle = '#fff'; cx.lineWidth = 2; cx.stroke();
       previa.src = salida(); previa.classList.toggle('cuadrado', st.forma === 'cuadrado');
       fondo.querySelectorAll('[data-rc="redondo"],[data-rc="cuadrado"]').forEach(b => b.classList.toggle('sel', b.dataset.rc === st.forma));
       zoomEl.value = st.zoom;
