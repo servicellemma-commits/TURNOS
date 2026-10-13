@@ -3,7 +3,7 @@ import { configurado, auth, db, onAuthStateChanged, signInAnonymously, Recaptcha
   doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js';
 import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js';
 import { textoUrgencia, fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
-  slotsFor, inicios, primerLibre, tramo, textoHorarios, textos, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js';
+  slotsFor, inicios, primerLibre, tramo, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js';
 
 const app = document.getElementById('app');
 const slug = (location.hash.replace('#', '') || new URLSearchParams(location.search).get('p') || PROFESIONAL_POR_DEFECTO).toLowerCase();
@@ -42,7 +42,7 @@ const V = {
       ${carteles(P)}
       ${P.aviso ? `<p class="alerta">${esc(P.aviso)}</p>` : ''}
       <button class="btn pri block" data-a="reservar">Sacar turno</button>
-      <p class="small muted" style="text-align:center">Sin registrarte ni contraseñas.</p>
+      ${fraseSinRegistro(P) ? `<p class="small muted" style="text-align:center;font-weight:700;font-size:${tamanoFrase(P)}px">${esc(fraseSinRegistro(P))}</p>` : ''}
       ${n || hijosFam().length ? `<button class="btn block" data-a="ir" data-p="inicio">Mis turnos${n ? ' (' + n + ')' : ''}</button>` : ''}
     </div></div>
     <div class="card"><h3>Obras sociales</h3><div class="chips">${(P.obras || []).map(o => `<span class="pill free">${esc(o)}</span>`).join('')}</div></div>`;

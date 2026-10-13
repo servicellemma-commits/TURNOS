@@ -3,7 +3,7 @@ import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider,
   doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js';
 import { ADMINS, PLATAFORMA } from './firebase-config.js';
 import { abrirRecorte } from './recorte.js';
-import { relojHtml, climaHtml, iniciarReloj, textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
+import { FRASE_DEFECTO, TAMANOS_FRASE, fraseSinRegistro, relojHtml, climaHtml, iniciarReloj, textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
   ICONOS, iconoSvg, iconoAuto, urgenciaDefecto, textoUrgencia,
   fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js';
@@ -99,7 +99,7 @@ const PRO = {
     const P = S.P, d = S.dar, dias = proximos(21).filter(k => slotsFor(P, k, turnoEn).some(s => !s.t));
     if (!d.fecha && dias.length) d.fecha = dias[0];
     const libres = d.fecha ? slotsFor(P, d.fecha, turnoEn).filter(s => !s.t) : [];
-    return `<div class="card"><h2>Dar turno</h2><p class="small muted">Para cuando te llaman por teléfono. Si el chico ya es paciente, escribí su DNI y se completa solo.</p>
+    return `<div class="card"><h2>Dar turno</h2><p class="small muted">Para cuando te llaman por teléfono. Si ya es paciente, escribí su DNI y se completa solo.</p>
       <div class="days">${dias.slice(0, 8).map(k => { const x = parseKey(k); return `<button class="chip${d.fecha === k ? ' sel' : ''}" data-a="darDia" data-k="${k}">${k === ahora().HOY ? 'Hoy' : DOWS[x.getDay()]}<b>${x.getDate()}</b><span class="small">${slotsFor(P, k, turnoEn).filter(s => !s.t).length} libres</span></button>`; }).join('')}</div>
       ${d.fecha ? `<p class="franja">${esc(fechaLarga(d.fecha))}</p><div class="slots">${libres.map(s => `<button class="chip${d.hora === s.hora ? ' sel' : ''}" data-a="darHora" data-h="${s.hora}">${fmtHora(s.hora, P)}</button>`).join('')}</div>` : '<p class="muted">No hay horarios libres.</p>'}
       <div class="grid2"><div><label for="d-dni">${textos(P).dni}</label><input id="d-dni" inputmode="numeric" value="${esc(d.dni)}" data-c="darDni"></div><div><label for="d-mot">Motivo</label><select id="d-mot">${(P.motivos || []).map(m => `<option${d.motivo === m ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></div></div>
@@ -168,6 +168,9 @@ const PRO = {
       <label for="c-aviso">Aviso en tu página</label><textarea id="c-aviso" style="min-height:80px">${esc(P.aviso)}</textarea>
       <label for="c-ext">Obra social que saca turno por su propio sistema</label><select id="c-ext"><option value="">Ninguna</option>${(P.obras || []).map(o => `<option${P.obraExterna === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>
       <p class="small muted">Si una familia elige esa obra social, la página le avisa y no la deja reservar.</p>
+      <label for="c-frase">Frase debajo del botón "Sacar turno"</label><input id="c-frase" value="${esc(fraseSinRegistro(P))}" placeholder="${esc(FRASE_DEFECTO)}">
+      <label for="c-frase-tam">Tamaño de la frase</label><select id="c-frase-tam">${Object.entries(TAMANOS_FRASE).map(([k, v]) => `<option value="${k}"${(P.fraseTam || 'medio') === k ? ' selected' : ''}>${v[0]}</option>`).join('')}</select>
+      <p class="small muted">Si dejás la frase vacía, no se muestra.</p>
       <label for="c-recs">Recomendaciones antes del turno (una por línea)</label><textarea id="c-recs" style="min-height:90px">${esc((P.recomendaciones || []).join('\n'))}</textarea>
       <p class="small muted">Se ven al confirmar el turno. Si lo dejás vacío, se muestra el aviso de siempre.</p>
       <label for="c-urg">Mensaje de urgencias (se ve al elegir el motivo)</label><textarea id="c-urg" style="min-height:80px">${esc(textoUrgencia(P))}</textarea>
@@ -184,7 +187,7 @@ const PRO = {
       ${cambio ? `<button class="btn link" data-a="descartarMotivos">Descartar cambios</button>` : ''}</div>
       <div class="card"><h3>Obras sociales y límites</h3>
       <label for="c-obras">Obras sociales (una por línea)</label><textarea id="c-obras">${esc((P.obras || []).join('\n'))}</textarea>
-      <label for="c-lim">Turnos pendientes por chico</label><select id="c-lim">${[1, 2, 3].map(n => `<option value="${n}"${P.limite === n ? ' selected' : ''}>${n}</option>`).join('')}</select>
+      <label for="c-lim">Turnos pendientes por paciente</label><select id="c-lim">${[1, 2, 3].map(n => `<option value="${n}"${P.limite === n ? ' selected' : ''}>${n}</option>`).join('')}</select>
       <button class="btn pri block" data-a="guardarTurnos">Guardar</button>`; }
     if (S.sec === 'horarios') return `<div class="card"><h2>Configuración</h2><div class="secs">${secs.map(([k, l]) => `<button class="chip${S.sec === k ? ' sel' : ''}" data-a="sec" data-s="${k}">${l}</button>`).join('')}</div></div>${PRO.horarios()}`;
     return `<div class="card"><h2>Configuración</h2><div class="secs">${secs.map(([k, l]) => `<button class="chip${S.sec === k ? ' sel' : ''}" data-a="sec" data-s="${k}">${l}</button>`).join('')}</div></div><div class="card">${c}</div>`;
@@ -271,7 +274,7 @@ const A = {
   guardarDar: async () => {
     borradorDar(); const d = S.dar;
     if (!d.fecha || !d.hora) { S.err = 'Elegí día y horario.'; return render(); }
-    if (!d.nombre) { S.err = S.P.tipo === 'general' ? 'Escribí el nombre del paciente.' : 'Escribí el nombre del chico o chica.'; return render(); }
+    if (!d.nombre) { S.err = S.P.tipo === 'general' ? 'Escribí el nombre del paciente.' : 'Escribí el nombre del niño o niña.'; return render(); }
     if (!libre(d.fecha, d.hora)) { S.err = 'Ese horario ya está ocupado.'; return render(); }
     const prev = d.dni ? pacientes().find(p => p.dni === d.dni) : null;
     S.enviando = true; S.err = ''; render();
@@ -371,7 +374,7 @@ const A = {
     await guardarP({ especialidad: m.nombre === 'Otra especialidad' ? S.P.especialidad : m.nombre, tipo: m.tipo, motivos: m.motivos, motivosIcono: Object.fromEntries(m.motivos.map(x => [x, iconoAuto(x)])), recomendaciones: m.recs }, 'Modelo de ' + m.nombre + ' cargado');
   },
   guardarInfo: async () => { if (await guardarP({ nombre: val('c-nom') || S.P.nombre, especialidad: val('c-esp'), tipo: val('c-tipo') || 'pediatria', ciudad: val('c-ciudad'), relojPublico: !!document.getElementById('c-relojpub')?.checked, lugar: val('c-lug'), direccion: val('c-dir'), telefono: val('c-tel') }, 'Cambios guardados')) refrescarClima(); },
-  guardarAvisos: () => guardarP({ aviso: val('c-aviso'), obraExterna: val('c-ext'), urgencia: (document.getElementById('c-urg')?.value || '').trim(), recomendaciones: (document.getElementById('c-recs')?.value || '').split('\n').map(x => x.trim()).filter(Boolean) }, 'Avisos guardados'),
+  guardarAvisos: () => guardarP({ frase: val('c-frase'), fraseTam: val('c-frase-tam') || 'medio', aviso: val('c-aviso'), obraExterna: val('c-ext'), urgencia: (document.getElementById('c-urg')?.value || '').trim(), recomendaciones: (document.getElementById('c-recs')?.value || '').split('\n').map(x => x.trim()).filter(Boolean) }, 'Avisos guardados'),
   urgOriginal: () => { const t = document.getElementById('c-urg'); if (t) t.value = urgenciaDefecto(S.P); toast('Tocá Guardar para aplicarlo'); },
   guardarTurnos: () => { leerMot(); const lines = id => (document.getElementById(id).value || '').split('\n').map(s => s.trim()).filter(Boolean); guardarP({ obras: lines('c-obras'), limite: Number(val('c-lim')) || 1 }, 'Cambios guardados'); },
   motIcono: d => { leerMot(); S.motSel = S.motSel === Number(d.i) ? null : Number(d.i); render(); },

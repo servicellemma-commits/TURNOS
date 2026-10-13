@@ -188,14 +188,14 @@ export function textos(P) {
   if (P && P.tipo === 'general') return {
     guardados: 'Mis pacientes', agregar: 'Agregar paciente', agregarOtro: '+ Agregar otro paciente', sinGuardados: 'Todavía no guardaste pacientes en este celular.',
     quien: '¿Para quién es el turno?', quienSub: 'Si el turno es para más de una persona, elegilas a todas: les damos turnos seguidos.',
-    motivo: '¿Cuál es el motivo de la consulta?', nombre: 'Nombre y apellido del paciente', dni: 'DNI del paciente', resp: 'Tu nombre y apellido',
+    motivo: '¿Cuál es el motivo de la consulta?', nombre: 'Nombre y apellido del paciente', dni: 'DNI (del paciente)', resp: 'Tu nombre y apellido',
     elegir: 'Tocá el nombre del paciente para seguir.', dniMal: 'Revisá el DNI: tiene que tener 7 u 8 números.', libre: 'para otra persona', nombreCorto: 'del paciente'
   };
   return {
     guardados: 'Mis hijos', agregar: 'Agregar hijo o hija', agregarOtro: '+ Agregar otro hijo o hija', sinGuardados: 'Todavía no guardaste hijos en este celular.',
     quien: '¿Para quién es el turno?', quienSub: 'Si traés a más de uno, elegilos a todos: les damos turnos seguidos.',
-    motivo: '¿Por qué lo traés?', nombre: 'Nombre y apellido del chico o chica', dni: 'DNI del chico', resp: 'Tu nombre (mamá, papá o responsable)',
-    elegir: 'Tocá el nombre de tu hijo o hija para seguir.', dniMal: 'Revisá el DNI del chico: tiene que tener 7 u 8 números.', libre: 'para otra familia', nombreCorto: 'del chico'
+    motivo: '¿Por qué lo traés?', nombre: 'Nombre y apellido del niño o niña (paciente)', dni: 'DNI (del paciente o niño)', resp: 'Tu nombre (mamá, papá o responsable)',
+    elegir: 'Tocá el nombre de tu hijo o hija para seguir.', dniMal: 'Revisá el DNI del paciente o niño: tiene que tener 7 u 8 números.', libre: 'para otra familia', nombreCorto: 'del chico'
   };
 }
 
@@ -261,3 +261,9 @@ export function iniciarReloj(getP) {
   setInterval(tic, 15000); setInterval(clim, 10 * 60000); setTimeout(clim, 800);
   return clim;
 }
+
+/* ---------- Frase debajo del botón "Sacar turno" ---------- */
+export const FRASE_DEFECTO = 'Sin registrarte ni contraseñas.';
+export const TAMANOS_FRASE = { normal: ['Normal', 12], medio: ['Un poquito más grande', 14], grande: ['Grande', 17] };
+export const fraseSinRegistro = P => P.frase === undefined ? FRASE_DEFECTO : P.frase;
+export const tamanoFrase = P => (TAMANOS_FRASE[P.fraseTam] || TAMANOS_FRASE.medio)[1];
