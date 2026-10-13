@@ -10,6 +10,14 @@ const slug = (location.hash.replace('#', '') || new URLSearchParams(location.sea
 const S = { P: null, noExiste: false, ocup: new Map(), user: null, fam: null, mis: [], pant: 'cartilla', res: null, err: '', ultima: [], confirmar: null, enviando: false, sms: null };
 
 const ocupado = (f, h) => S.ocup.get(f + ' ' + h);
+const OTRA = '__otra';
+// Menú de obras sociales con la opción "Otra" (se abre un recuadro para escribirla)
+function obraCampo(id, obras, actual, conVacio) {
+  const lista = obras || [], esOtra = !!actual && !lista.includes(actual);
+  return `<select id="${id}">${conVacio ? '<option value="">Elegí una</option>' : ''}${lista.map(o => `<option${actual === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}<option value="${OTRA}"${esOtra ? ' selected' : ''}>Otra (escribila)</option></select>
+    <input id="${id}-otra" placeholder="¿Cuál es tu obra social?" value="${esOtra ? esc(actual) : ''}" ${esOtra ? '' : 'hidden'} style="margin-top:8px" autocomplete="off">`;
+}
+const valObra = id => { const v = val(id); return v === OTRA ? val(id + '-otra') : v; };
 const hijosFam = () => (S.fam && S.fam.hijos) || [];
 const misActivos = () => S.mis.filter(t => t.estado === 'activo' && (t.fecha > ahora().HOY || (t.fecha === ahora().HOY && toMin(t.hora) >= ahora().min)));
 const pendientesDe = dni => !dni ? 0 : misActivos().filter(t => t.paciente && t.paciente.dni === dni).length;
@@ -56,7 +64,7 @@ const V = {
     <div class="card"><h3>Próximos turnos</h3>
       ${mis.length ? `<div class="list">${mis.map(t => `<div class="item"><div class="grow"><b>${esc(nombreCorto(t.paciente.nombre))}</b> · ${esc(t.motivo)}<p class="small muted">${esc(fechaLarga(t.fecha))}, ${conH(t.hora, S.P)}</p></div>${S.confirmar === t.id ? `<div class="row"><button class="btn sm danger" data-a="cancelar" data-id="${t.id}">Sí, cancelar</button><button class="btn sm" data-a="noCancelar">No</button></div>` : `<button class="btn sm" data-a="pregCancelar" data-id="${t.id}">Cancelar</button>`}</div>`).join('')}</div>` : `<p class="muted small">No tenés turnos pendientes en este celular.</p>`}</div>
     <div class="card"><div class="row between"><h3>${X.guardados}</h3><button class="btn sm" data-a="ir" data-p="hijo">Agregar</button></div>
-      ${hijosFam().length ? `<div class="list">${hijosFam().map(h => `<div class="item"><div class="logo sm" aria-hidden="true">${esc(h.nombre[0] || '?')}</div><div class="grow"><b>${esc(h.nombre)}</b><p class="small muted">${esc(edad(h.nac))} · ${esc(h.obra)}</p></div></div>`).join('')}</div>` : `<p class="muted small">${X.sinGuardados}</p>`}</div>
+      ${hijosFam().length ? `<div class="list">${hijosFam().map(h => `<div class="item"><div class="logo sm" aria-hidden="true">${esc(h.nombre[0] || '?')}</div><div class="grow"><b>${esc(h.nombre)}</b><p class="small muted">${esc(edad(h.nac))} · ${esc(h.obra)}</p>${S.quitar === h.id ? `<p class="small" style="margin:6px 0 4px">¿Quitar a ${esc(nombreCorto(h.nombre))} de la lista? Los turnos que ya sacó no se borran.</p><div class="row"><button class="btn sm danger" data-a="quitarHijo" data-id="${h.id}">Sí, quitar</button><button class="btn sm" data-a="noQuitar">No</button></div>` : ''}</div>${S.quitar === h.id ? '' : `<button class="btn sm" data-a="pregQuitar" data-id="${h.id}" aria-label="Quitar a ${esc(nombreCorto(h.nombre))}">Quitar</button>`}</div>`).join('')}</div>` : `<p class="muted small">${X.sinGuardados}</p>`}</div>
     <button class="btn link" data-a="ir" data-p="cartilla">Volver</button>`;
   },
 
@@ -65,7 +73,7 @@ const V = {
     return `${cabecera()}<div class="card"><h2>${X.agregar}</h2>
       <label for="h-nom">Nombre y apellido</label><input id="h-nom">
       <div class="grid2"><div><label for="h-dni">DNI</label><input id="h-dni" inputmode="numeric"></div><div><label for="h-nac">Fecha de nacimiento</label><input id="h-nac" type="date" max="${ahora().HOY}"></div></div>
-      <label for="h-obra">Obra social</label><select id="h-obra">${(S.P.obras || []).map(o => `<option>${esc(o)}</option>`).join('')}</select>
+      <label for="h-obra">Obra social</label>${obraCampo('h-obra', S.P.obras, '', false)}
       ${errHtml()}<button class="btn pri block" data-a="guardarHijo">Guardar</button>
       <button class="btn link" data-a="ir" data-p="inicio">Volver</button></div>`;
   },
@@ -102,7 +110,7 @@ const V = {
       <div class="hint"><b>${esc(fechaLarga(r.fecha))}, ${conH(r.hora, P)}</b> · ${esc(r.motivo)}</div>
       <label for="g-chico">${X.nombre}</label><input id="g-chico" value="${esc(g.chico)}">
       <div class="grid2"><div><label for="g-dni">${X.dni}</label><input id="g-dni" inputmode="numeric" value="${esc(g.dni)}"></div><div><label for="g-nac">Nacimiento</label><input id="g-nac" type="date" max="${t.HOY}" value="${esc(g.nac)}"></div></div>
-      <label for="g-obra">Obra social</label><select id="g-obra"><option value="">Elegí una</option>${(P.obras || []).map(o => `<option${g.obra === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>
+      <label for="g-obra">Obra social</label>${obraCampo('g-obra', P.obras, g.obra, true)}
       <label for="g-resp">${X.resp}</label><input id="g-resp" value="${esc(g.resp)}" autocomplete="name">
       <label for="g-cont">Tu celular</label><input id="g-cont" type="tel" inputmode="tel" value="${esc(g.cont)}" placeholder="2604 123456" autocomplete="tel-national">
       <p class="small muted">Código de área sin el 0 y número sin el 15.</p>
@@ -162,7 +170,7 @@ window.addEventListener('popstate', e => {
 });
 function leerSiHay() { if (S.pant === 'reservar' && S.res && pasoAct() === 'datos') { leerG(); return true; } return false; }
 const val = id => (document.getElementById(id)?.value || '').trim();
-function leerG() { const g = S.res.g; g.chico = val('g-chico'); g.dni = soloNum(val('g-dni')); g.nac = val('g-nac'); g.obra = val('g-obra'); g.resp = val('g-resp'); g.cont = val('g-cont'); g.guardar = !!document.getElementById('g-guardar')?.checked; }
+function leerG() { const g = S.res.g; g.chico = val('g-chico'); g.dni = soloNum(val('g-dni')); g.nac = val('g-nac'); g.obra = valObra('g-obra'); g.resp = val('g-resp'); g.cont = val('g-cont'); g.guardar = !!document.getElementById('g-guardar')?.checked; }
 
 // Graba los turnos en un solo paso: si alguien tomó el horario un segundo antes, no se graba nada
 async function grabarTurnos(pacientes, horas, responsable) {
@@ -251,12 +259,20 @@ const A = {
   },
   volverReserva: () => history.back(),
   guardarHijo: async () => {
-    const h = { id: uid(), nombre: val('h-nom'), dni: soloNum(val('h-dni')), nac: val('h-nac'), obra: val('h-obra') };
+    const h = { id: uid(), nombre: val('h-nom'), dni: soloNum(val('h-dni')), nac: val('h-nac'), obra: valObra('h-obra') };
+    if (val('h-obra') === OTRA && !h.obra) { S.err = 'Escribí el nombre de tu obra social.'; return render(); }
     if (!h.nombre || !h.nac) { S.err = 'Completá el nombre y la fecha de nacimiento.'; return render(); }
     try { await setDoc(doc(db, 'familias', S.user.uid), { hijos: [...hijosFam(), h] }, { merge: true }); toast(nombreCorto(h.nombre) + ' agregado'); }
     catch (e) { console.error(e); S.err = 'No pudimos guardar. Probá de nuevo.'; return render(); }
     if (S.res && S.res.cuenta) { S.res.hijos.push(h.id); S.err = ''; history.back(); }
     else if (S.res && !S.res.cuenta) { A.reservar(); } else ir('inicio');
+  },
+  pregQuitar: d => { S.quitar = d.id; render(); },
+  noQuitar: () => { S.quitar = null; render(); },
+  quitarHijo: async d => {
+    const h = hijosFam().find(x => x.id === d.id);
+    try { await setDoc(doc(db, 'familias', S.user.uid), { hijos: hijosFam().filter(x => x.id !== d.id) }, { merge: true }); S.quitar = null; if (S.res) S.res.hijos = S.res.hijos.filter(x => x !== d.id); toast((h ? nombreCorto(h.nombre) : 'Listo') + ' quitado de la lista'); }
+    catch (e) { console.error(e); toast('No se pudo quitar. Probá de nuevo.'); }
   },
   pregCancelar: d => { S.confirmar = d.id; render(); },
   noCancelar: () => { S.confirmar = null; render(); },
@@ -268,6 +284,11 @@ const A = {
 };
 
 document.addEventListener('click', e => { const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const fn = A[el.dataset.a]; if (fn) { e.preventDefault(); fn(el.dataset); } });
+document.addEventListener('change', e => {
+  const el = e.target; if (!el || (el.id !== 'g-obra' && el.id !== 'h-obra')) return;
+  const o = document.getElementById(el.id + '-otra'); if (!o) return;
+  o.hidden = el.value !== OTRA; if (!o.hidden) o.focus();
+});
 window.addEventListener('hashchange', () => location.reload());
 
 /* ---------- Conexión con los datos ---------- */
