@@ -107,7 +107,11 @@ export const TEMAS = {
   flores: { nombre: 'Flores', accent: '#c94f7c', head: '#fbeaf0', fg: '#72243e', sub: '#993556', deco: () => daisy(110, 24, 1.25) + daisy(72, 58, .8) + daisy(128, 66, .55) + daisy(40, 18, .45) },
   gatitos: { nombre: 'Gatitos', accent: '#6b5fc7', head: '#eeedfe', fg: '#3c3489', sub: '#534ab7', deco: () => cat(108, 40, 1.3) + cat(66, 62, .7) + paw(36, 22, .7) + paw(132, 74, .5) },
   clasico: { nombre: 'Clásico', accent: '#2f6fd6', head: '#e6f1fb', fg: '#0c447c', sub: '#185fa5', deco: dots },
-  menta: { nombre: 'Menta', accent: '#15876a', head: '#e1f5ee', fg: '#085041', sub: '#0f6e56', deco: () => leaf(84, 30, -30, 1.4) + leaf(104, 60, 20, 1.1) + leaf(60, 64, -60, .8) + leaf(120, 14, 40, .7) }
+  menta: { nombre: 'Menta', accent: '#15876a', head: '#e1f5ee', fg: '#085041', sub: '#0f6e56', deco: () => leaf(84, 30, -30, 1.4) + leaf(104, 60, 20, 1.1) + leaf(60, 64, -60, .8) + leaf(120, 14, 40, .7) },
+  oceano: { nombre: 'Océano', accent: '#1f78b4', head: '#dff0fb', fg: '#0b3a5c', sub: '#1d5f8f', deco: () => `<path d="M0 70 q12-10 24 0 t24 0 t24 0 t24 0 t24 0 t24 0" fill="none" stroke="#1f78b4" stroke-width="3"/><path d="M0 78 q12-10 24 0 t24 0 t24 0 t24 0 t24 0 t24 0" fill="none" stroke="#7fb8de" stroke-width="3"/><path d="M96 56 l0-34 l22 28z" fill="#fff" stroke="#1f78b4" stroke-width="2"/><path d="M90 58 h36 l-6 10 h-24z" fill="#1f78b4"/>` },
+  autitos: { nombre: 'Autitos', accent: '#d9482b', head: '#fdebe5', fg: '#6b1f10', sub: '#a63a22', deco: () => `<rect x="60" y="40" width="64" height="20" rx="8" fill="#d9482b"/><path d="M72 40 l8-14 h28 l8 14z" fill="#f08a73"/><circle cx="78" cy="62" r="8" fill="#333"/><circle cx="108" cy="62" r="8" fill="#333"/><path d="M0 76 h140" stroke="#999" stroke-width="3" stroke-dasharray="10 8"/>` },
+  espacio: { nombre: 'Espacio', accent: '#5b4fd1', head: '#e8e6fb', fg: '#231a6b', sub: '#4338b0', deco: () => `<circle cx="100" cy="36" r="16" fill="#5b4fd1"/><ellipse cx="100" cy="36" rx="26" ry="6" fill="none" stroke="#a9a1f0" stroke-width="3"/><path d="M40 20 l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="#f5b700"/><path d="M118 70 l2 5 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z" fill="#f5b700"/>` },
+  bosque: { nombre: 'Bosque', accent: '#2e7d32', head: '#e3f4e4', fg: '#14411a', sub: '#2a6a30', deco: () => `<path d="M90 70 l16-40 16 40z" fill="#2e7d32"/><path d="M70 74 l12-28 12 28z" fill="#66a96a"/><rect x="102" y="70" width="8" height="10" fill="#6d4c2f"/><circle cx="40" cy="30" r="9" fill="#f5b700"/>` }
 };
 export const decoSvg = (t, cls) => `<svg class="${cls || 'deco'}" viewBox="0 0 140 84" preserveAspectRatio="xMaxYMin meet" aria-hidden="true">${(TEMAS[t] || TEMAS.clasico).deco()}</svg>`;
 export function aplicarTema(P) {
@@ -176,3 +180,21 @@ export function achicarImagen(file) {
   });
 }
 export const sinConfig = `<div class="card"><h2>Falta conectar la base de datos</h2><p class="muted">Pegá el bloque <b>firebaseConfig</b> en <b>js/firebase-config.js</b>. Los pasos están en el archivo LEEME.md.</p></div>`;
+
+/* ---------- Textos según el tipo de consultorio ---------- */
+// 'pediatria' (por defecto): los turnos son de chicos. 'general': pacientes de cualquier edad.
+export const TIPOS = { pediatria: 'Pediatría (turnos para chicos)', general: 'Otra especialidad (turnos para adultos)' };
+export function textos(P) {
+  if (P && P.tipo === 'general') return {
+    guardados: 'Mis pacientes', agregar: 'Agregar paciente', agregarOtro: '+ Agregar otro paciente', sinGuardados: 'Todavía no guardaste pacientes en este celular.',
+    quien: '¿Para quién es el turno?', quienSub: 'Si el turno es para más de una persona, elegilas a todas: les damos turnos seguidos.',
+    motivo: '¿Cuál es el motivo de la consulta?', nombre: 'Nombre y apellido del paciente', dni: 'DNI del paciente', resp: 'Tu nombre y apellido',
+    elegir: 'Tocá el nombre del paciente para seguir.', dniMal: 'Revisá el DNI: tiene que tener 7 u 8 números.', libre: 'para otra persona', nombreCorto: 'del paciente'
+  };
+  return {
+    guardados: 'Mis hijos', agregar: 'Agregar hijo o hija', agregarOtro: '+ Agregar otro hijo o hija', sinGuardados: 'Todavía no guardaste hijos en este celular.',
+    quien: '¿Para quién es el turno?', quienSub: 'Si traés a más de uno, elegilos a todos: les damos turnos seguidos.',
+    motivo: '¿Por qué lo traés?', nombre: 'Nombre y apellido del chico o chica', dni: 'DNI del chico', resp: 'Tu nombre (mamá, papá o responsable)',
+    elegir: 'Tocá el nombre de tu hijo o hija para seguir.', dniMal: 'Revisá el DNI del chico: tiene que tener 7 u 8 números.', libre: 'para otra familia', nombreCorto: 'del chico'
+  };
+}
