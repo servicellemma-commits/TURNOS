@@ -24,7 +24,13 @@ service cloud.firestore {
       allow read: if true;
       allow create, delete: if admin();
       // El profesional cambia su configuración, pero no puede cambiar quiénes son los dueños
-      allow update: if admin() || (duenio(slug) && request.resource.data.owners == resource.data.owners);
+      // Los dueños no pueden tocar ni los dueños, ni el estado, ni los cobros
+      allow update: if admin() || (duenio(slug)
+        && resource.data.get('estado', 'activo') != 'pausado'
+        && request.resource.data.owners == resource.data.owners
+        && request.resource.data.get('estado', 'activo') == resource.data.get('estado', 'activo')
+        && request.resource.data.get('pagadoHasta', '') == resource.data.get('pagadoHasta', '')
+        && request.resource.data.get('notaAdmin', '') == resource.data.get('notaAdmin', ''));
 
       // Horarios tomados: solo fecha y hora, sin datos de nadie
       match /ocupados/{id} {
@@ -47,6 +53,7 @@ service cloud.firestore {
           && request.resource.data.uid == request.auth.uid
           && request.resource.data.estado == 'activo'
           && request.resource.data.origen == 'web'
+          && get(/databases/$(database)/documents/profesionales/$(slug)).data.get('estado', 'activo') != 'pausado'
           && fechaValida(request.resource.data.fecha) && horaValida(request.resource.data.hora)
           && existsAfter(/databases/$(database)/documents/profesionales/$(slug)/ocupados/$(request.resource.data.fecha + '_' + request.resource.data.hora.replace(':', '')))
         );

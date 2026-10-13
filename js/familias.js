@@ -136,6 +136,7 @@ function render() {
   if (S.noExiste) { app.innerHTML = `<div class="card"><h2>No encontramos esta página</h2><p class="muted">Revisá el link que te pasaron.</p></div>`; return; }
   if (!S.P || !S.user) { app.innerHTML = `<div class="card"><p class="muted">Cargando…</p></div>`; return; }
   aplicarTema(S.P); document.title = 'Turnos · ' + S.P.nombre;
+  if (S.P.estado === 'pausado') { app.innerHTML = `<div class="top"></div>${cabecera()}<div class="card"><h2>Turnos online no disponibles</h2><p class="muted">Por ahora no se pueden sacar turnos por esta página.${S.P.telefono ? ' Comunicate al ' + esc(S.P.telefono) + '.' : ''}</p></div>`; return; }
   app.innerHTML = `<div class="top"></div>${V[S.pant]()}<p class="foot">${esc(PLATAFORMA)} · turnos online</p>`;
 }
 function ir(p, sinHistorial) {
