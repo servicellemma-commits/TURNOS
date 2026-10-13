@@ -15,6 +15,7 @@ const linkApp = () => location.href.replace(/admin\/.*$/, '') + 'app/';
 function estadoPago(p) {
   if (p.estado === 'pausado') return ['Pausado', 'err'];
   if (!p.pagadoHasta) return ['Sin cobro cargado', 'muted'];
+  if (p.pagadoHasta >= '9999') return ['Para siempre (sin cobro)', 'muted'];
   return p.pagadoHasta < ahora().HOY ? ['Vencido el ' + fechaCorta(p.pagadoHasta), 'err'] : ['Al día hasta el ' + fechaCorta(p.pagadoHasta), 'muted'];
 }
 
@@ -25,7 +26,8 @@ function fila(p) {
     ${ab ? `<div class="stack" style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
       <p class="small muted">Página de las familias:<br><b>${esc(linkDe(p.slug))}</b></p>
       <p class="small muted">Dueños (pueden entrar a la app): <b>${esc((p.owners || []).join(', '))}</b></p>
-      <label for="pg-${esc(p.slug)}">Pagó hasta</label><input type="date" id="pg-${esc(p.slug)}" value="${esc(p.pagadoHasta || '')}">
+      <label for="pg-${esc(p.slug)}">Pagó hasta</label><input type="date" id="pg-${esc(p.slug)}" value="${esc(p.pagadoHasta >= '9999' ? '' : (p.pagadoHasta || ''))}">
+      <button class="btn" data-a="siempre" data-s="${esc(p.slug)}">Para siempre (sin cobro)</button>
       <div class="grid2"><button class="btn" data-a="mes" data-s="${esc(p.slug)}">+1 mes (pagó)</button><button class="btn pri" data-a="guardarPago" data-s="${esc(p.slug)}">Guardar fecha</button></div>
       <label for="nt-${esc(p.slug)}">Nota (precio, cómo paga…)</label><input id="nt-${esc(p.slug)}" value="${esc(p.notaAdmin || '')}">
       <button class="btn" data-a="guardarNota" data-s="${esc(p.slug)}">Guardar nota</button>
@@ -90,6 +92,7 @@ const A = {
     f.setMonth(f.getMonth() + 1);
     cambiar(d.s, { pagadoHasta: keyOf(f), estado: 'activo' }, 'Cobro anotado');
   },
+  siempre: d => cambiar(d.s, { pagadoHasta: '9999-12-31', estado: 'activo' }, 'Queda para siempre'),
   guardarPago: d => cambiar(d.s, { pagadoHasta: val('pg-' + d.s) }, 'Fecha guardada'),
   guardarNota: d => cambiar(d.s, { notaAdmin: val('nt-' + d.s) }, 'Nota guardada'),
   agregarDuenio: d => {
