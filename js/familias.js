@@ -3,7 +3,7 @@ import { configurado, auth, db, onAuthStateChanged, signInAnonymously, Recaptcha
   doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js';
 import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js';
 import { textoUrgencia, fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
-  slotsFor, inicios, primerLibre, tramo, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js';
+  slotsFor, inicios, primerLibre, tramo, obraLogo, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js';
 
 const app = document.getElementById('app');
 const slug = (location.hash.replace('#', '') || new URLSearchParams(location.search).get('p') || PROFESIONAL_POR_DEFECTO).toLowerCase();
@@ -13,8 +13,10 @@ const ocupado = (f, h) => S.ocup.get(f + ' ' + h);
 const OTRA = '__otra';
 // Menú de obras sociales con la opción "Otra" (se abre un recuadro para escribirla)
 function obraCampo(id, obras, actual, conVacio) {
-  const lista = obras || [], esOtra = !!actual && !lista.includes(actual);
-  return `<select id="${id}">${conVacio ? '<option value="">Elegí una</option>' : ''}${lista.map(o => `<option${actual === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}<option value="${OTRA}"${esOtra ? ' selected' : ''}>Otra (escribila)</option></select>
+  const lista = obras || [], esOtra = !!actual && !lista.includes(actual), valor = esOtra ? OTRA : (actual || (conVacio ? '' : (lista[0] || '')));
+  const op = (v, html) => `<button type="button" class="obra-op${valor === v ? ' sel' : ''}" data-a="elegirObra" data-id="${id}" data-v="${esc(v)}" aria-pressed="${valor === v}">${html}</button>`;
+  return `<div class="obras-lista" data-obras="${id}">${lista.map(o => op(o, `${obraLogo(S.P, o)}<span>${esc(o)}</span>`)).join('')}${op(OTRA, '<span class="olg otra" aria-hidden="true">+</span><span>Otra (escribila)</span>')}</div>
+    <input type="hidden" id="${id}" value="${esc(valor)}">
     <input id="${id}-otra" placeholder="¿Cuál es tu obra social?" value="${esOtra ? esc(actual) : ''}" ${esOtra ? '' : 'hidden'} style="margin-top:8px" autocomplete="off">`;
 }
 const valObra = id => { const v = val(id); return v === OTRA ? val(id + '-otra') : v; };
@@ -53,7 +55,7 @@ const V = {
       ${fraseSinRegistro(P) ? `<p class="small muted" style="text-align:center;font-weight:700;font-size:${tamanoFrase(P)}px">${esc(fraseSinRegistro(P))}</p>` : ''}
       ${n || hijosFam().length ? `<button class="btn block" data-a="ir" data-p="inicio">Mis turnos${n ? ' (' + n + ')' : ''}</button>` : ''}
     </div></div>
-    <div class="card"><h3>Obras sociales</h3><div class="chips">${(P.obras || []).map(o => `<span class="pill free">${esc(o)}</span>`).join('')}</div></div>`;
+    <div class="card"><h3>Obras sociales</h3><div class="chips">${(P.obras || []).map(o => `<span class="pill free obra-pill">${obraLogo(P, o, 'sm')}${esc(o)}</span>`).join('')}</div></div>`;
   },
 
   inicio() {
@@ -267,6 +269,11 @@ const A = {
     if (S.res && S.res.cuenta) { S.res.hijos.push(h.id); S.err = ''; history.back(); }
     else if (S.res && !S.res.cuenta) { A.reservar(); } else ir('inicio');
   },
+  elegirObra: d => {
+    const h = document.getElementById(d.id), o = document.getElementById(d.id + '-otra'); if (!h) return;
+    h.value = d.v; document.querySelectorAll('[data-obras="' + d.id + '"] .obra-op').forEach(b => { const on = b.dataset.v === d.v; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on); });
+    if (o) { o.hidden = d.v !== OTRA; if (!o.hidden) o.focus(); }
+  },
   pregQuitar: d => { S.quitar = d.id; render(); },
   noQuitar: () => { S.quitar = null; render(); },
   quitarHijo: async d => {
@@ -284,11 +291,6 @@ const A = {
 };
 
 document.addEventListener('click', e => { const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const fn = A[el.dataset.a]; if (fn) { e.preventDefault(); fn(el.dataset); } });
-document.addEventListener('change', e => {
-  const el = e.target; if (!el || (el.id !== 'g-obra' && el.id !== 'h-obra')) return;
-  const o = document.getElementById(el.id + '-otra'); if (!o) return;
-  o.hidden = el.value !== OTRA; if (!o.hidden) o.focus();
-});
 window.addEventListener('hashchange', () => location.reload());
 
 /* ---------- Conexión con los datos ---------- */

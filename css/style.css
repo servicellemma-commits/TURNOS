@@ -189,3 +189,12 @@ textarea{min-height:90px;resize:vertical}
 .reloj b{font:700 19px var(--head,inherit);letter-spacing:.5px}
 .reloj .small{white-space:nowrap}
 .franja-reloj{display:flex;justify-content:space-between;gap:8px;align-items:center;background:color-mix(in srgb,var(--accent) 8%,var(--surface));border-radius:10px;padding:9px 12px;font-size:13px}
+.olg{width:28px;height:28px;border-radius:8px;flex:none;display:inline-flex;align-items:center;justify-content:center;color:#fff;font:700 11px var(--body,sans-serif);overflow:hidden;line-height:1}
+.olg img{width:100%;height:100%;object-fit:cover;display:block}
+.olg.sm{width:20px;height:20px;border-radius:50%;font-size:9px}
+.olg.otra{background:var(--muted,#888);font-size:16px}
+.obra-pill{display:inline-flex;align-items:center;gap:6px;padding-left:5px}
+.obras-lista{display:flex;flex-direction:column;gap:8px}
+.obra-op{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:8px 10px;font:600 14px var(--body,sans-serif);cursor:pointer}
+.obra-op.sel{border:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));padding:7px 9px}
+.obra-fila{display:flex;align-items:center;gap:10px;flex-wrap:wrap}

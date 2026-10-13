@@ -267,3 +267,22 @@ export const FRASE_DEFECTO = 'Sin registrarte ni contraseñas.';
 export const TAMANOS_FRASE = { normal: ['Normal', 12], medio: ['Un poquito más grande', 14], grande: ['Grande', 17] };
 export const fraseSinRegistro = P => P.frase === undefined ? FRASE_DEFECTO : P.frase;
 export const tamanoFrase = P => (TAMANOS_FRASE[P.fraseTam] || TAMANOS_FRASE.medio)[1];
+
+/* ---------- Logos chiquitos de las obras sociales ---------- */
+const COLORES_OBRA = ['#2f6fd6', '#d9482b', '#15876a', '#7a4fc9', '#c94f7c', '#b7791f', '#0f7b8a', '#5c6bc0'];
+export function obraLogo(P, nombre, cls) {
+  const src = P && P.obrasLogos && P.obrasLogos[nombre];
+  if (src) return `<span class="olg ${cls || ''}"><img src="${src}" alt=""></span>`;
+  let h = 0; for (const c of String(nombre)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const ini = String(nombre).split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+  return `<span class="olg ${cls || ''}" style="background:${COLORES_OBRA[h % COLORES_OBRA.length]}" aria-hidden="true">${ini.replace(/[<>&]/g, '')}</span>`;
+}
+// Achica una imagen (dataURL) a un cuadrado de px x px para que pese poco
+export function reducirImagen(src, px) {
+  return new Promise((ok, mal) => {
+    const i = new Image(); i.onerror = () => mal(new Error('imagen')); i.onload = () => {
+      const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d');
+      x.fillStyle = '#fff'; x.fillRect(0, 0, px, px); x.drawImage(i, 0, 0, px, px); ok(c.toDataURL('image/jpeg', 0.85));
+    }; i.src = src;
+  });
+}

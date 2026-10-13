@@ -17,7 +17,7 @@ function armar(img, forma, nombre, alCerrar) {
   const fondo = document.createElement('div');
   fondo.className = 'modal-fondo';
   fondo.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="rc-tit">
-    <h3 id="rc-tit">Acomodá tu logo</h3>
+    <h3 id="rc-tit">Acomodá el logo</h3>
     <p class="small muted">Arrastrá la foto con el dedo para moverla. Pellizcá o usá la barra para el tamaño.</p>
     <canvas class="rc-lienzo" width="${LADO * 2}" height="${LADO * 2}" style="width:${LADO}px;height:${LADO}px" aria-label="Foto para recortar"></canvas>
     <div class="row"><span aria-hidden="true" class="muted">−</span><input type="range" class="grow" id="rc-zoom" min="1" max="4" step="0.01" value="1" aria-label="Tamaño de la foto"><span aria-hidden="true" class="muted">+</span></div>

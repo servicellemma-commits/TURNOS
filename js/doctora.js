@@ -3,7 +3,7 @@ import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider,
   doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js';
 import { ADMINS, PLATAFORMA } from './firebase-config.js';
 import { abrirRecorte } from './recorte.js';
-import { FRASE_DEFECTO, TAMANOS_FRASE, fraseSinRegistro, relojHtml, climaHtml, iniciarReloj, textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
+import { obraLogo, reducirImagen, FRASE_DEFECTO, TAMANOS_FRASE, fraseSinRegistro, relojHtml, climaHtml, iniciarReloj, textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
   ICONOS, iconoSvg, iconoAuto, urgenciaDefecto, textoUrgencia,
   fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js';
@@ -187,6 +187,8 @@ const PRO = {
       ${cambio ? `<button class="btn link" data-a="descartarMotivos">Descartar cambios</button>` : ''}</div>
       <div class="card"><h3>Obras sociales y límites</h3>
       <label for="c-obras">Obras sociales (una por línea)</label><textarea id="c-obras">${esc((P.obras || []).join('\n'))}</textarea>
+      <h3>Logos de las obras sociales</h3><p class="small muted">Se ven chiquitos al lado de cada obra social. Si cambiás la lista de arriba, tocá Guardar primero.</p>
+      <div class="list">${(P.obras || []).map((o, i) => `<div class="item obra-fila">${obraLogo(P, o)}<div class="grow"><b>${esc(o)}</b></div><button class="btn sm" data-a="obraLogo" data-i="${i}">${P.obrasLogos && P.obrasLogos[o] ? 'Cambiar' : 'Poner logo'}</button>${P.obrasLogos && P.obrasLogos[o] ? `<button class="btn sm danger" data-a="obraLogoQuitar" data-i="${i}" aria-label="Quitar logo de ${esc(o)}">✕</button>` : ''}</div>`).join('') || '<p class="item muted">Todavía no cargaste obras sociales.</p>'}</div>
       <label for="c-lim">Turnos pendientes por paciente</label><select id="c-lim">${[1, 2, 3].map(n => `<option value="${n}"${P.limite === n ? ' selected' : ''}>${n}</option>`).join('')}</select>
       <button class="btn pri block" data-a="guardarTurnos">Guardar</button>`; }
     if (S.sec === 'horarios') return `<div class="card"><h2>Configuración</h2><div class="secs">${secs.map(([k, l]) => `<button class="chip${S.sec === k ? ' sel' : ''}" data-a="sec" data-s="${k}">${l}</button>`).join('')}</div></div>${PRO.horarios()}`;
@@ -376,6 +378,22 @@ const A = {
   guardarInfo: async () => { if (await guardarP({ nombre: val('c-nom') || S.P.nombre, especialidad: val('c-esp'), tipo: val('c-tipo') || 'pediatria', ciudad: val('c-ciudad'), relojPublico: !!document.getElementById('c-relojpub')?.checked, lugar: val('c-lug'), direccion: val('c-dir'), telefono: val('c-tel') }, 'Cambios guardados')) refrescarClima(); },
   guardarAvisos: () => guardarP({ frase: val('c-frase'), fraseTam: val('c-frase-tam') || 'medio', aviso: val('c-aviso'), obraExterna: val('c-ext'), urgencia: (document.getElementById('c-urg')?.value || '').trim(), recomendaciones: (document.getElementById('c-recs')?.value || '').split('\n').map(x => x.trim()).filter(Boolean) }, 'Avisos guardados'),
   urgOriginal: () => { const t = document.getElementById('c-urg'); if (t) t.value = urgenciaDefecto(S.P); toast('Tocá Guardar para aplicarlo'); },
+  obraLogo: d => {
+    const o = (S.P.obras || [])[Number(d.i)]; if (!o) return;
+    const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*';
+    f.onchange = () => {
+      const a = f.files && f.files[0]; if (!a) return;
+      const r = new FileReader(); r.onerror = () => toast('No se pudo leer la imagen');
+      r.onload = () => abrirRecorte(r.result, 'cuadrado', o, async (res, err) => {
+        if (err) return toast(err); if (!res) return;
+        try { const chico = await reducirImagen(res.logo, 80); await guardarP({ obrasLogos: { ...(S.P.obrasLogos || {}), [o]: chico } }, 'Logo de ' + o + ' guardado'); }
+        catch (e) { toast('No se pudo guardar el logo.'); }
+      });
+      r.readAsDataURL(a);
+    };
+    f.click();
+  },
+  obraLogoQuitar: d => { const o = (S.P.obras || [])[Number(d.i)]; if (!o) return; const m = { ...(S.P.obrasLogos || {}) }; delete m[o]; guardarP({ obrasLogos: m }, 'Logo quitado'); },
   guardarTurnos: () => { leerMot(); const lines = id => (document.getElementById(id).value || '').split('\n').map(s => s.trim()).filter(Boolean); guardarP({ obras: lines('c-obras'), limite: Number(val('c-lim')) || 1 }, 'Cambios guardados'); },
   motIcono: d => { leerMot(); S.motSel = S.motSel === Number(d.i) ? null : Number(d.i); render(); },
   motElegir: d => { leerMot(); if (S.motSel !== null) S.mot[S.motSel].i = d.k; S.motSel = null; render(); },
