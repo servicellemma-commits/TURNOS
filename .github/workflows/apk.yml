@@ -16,11 +16,14 @@ jobs:
         with: { gradle-version: '8.4' }
       - name: Llave de firma
         run: echo "${{ secrets.KEYSTORE_B64 }}" | base64 -d > $RUNNER_TEMP/turnos.jks
+      - name: Llave de firma (nueva en cada armado)
+        run: |
+          echo "KS_PASS=$(openssl rand -hex 12)" >> $GITHUB_ENV
+          echo "KS_PATH=$RUNNER_TEMP/turnos.jks" >> $GITHUB_ENV
+      - run: keytool -genkeypair -keystore "$KS_PATH" -alias turnos -keyalg RSA -keysize 2048 -validity 10000 -storepass "$KS_PASS" -keypass "$KS_PASS" -dname "CN=Turnos"
       - name: Armar
         working-directory: android
         env:
-          KS_PATH: ${{ runner.temp }}/turnos.jks
-          KS_PASS: ${{ secrets.KEYSTORE_PASS }}
           APK_VERSION: ${{ github.run_number }}
         run: gradle --no-daemon assembleRelease
       - name: Publicar
