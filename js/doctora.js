@@ -3,7 +3,7 @@ import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider,
   doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js';
 import { ADMINS, PLATAFORMA } from './firebase-config.js';
 import { abrirRecorte } from './recorte.js';
-import { esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
+import { textoHorarios, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
   ICONOS, iconoSvg, iconoAuto, urgenciaDefecto, textoUrgencia,
   fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js';
@@ -22,7 +22,15 @@ const claveP = t => (t.paciente && t.paciente.dni) || ('t-' + t.id);
 
 async function guardarP(cambios, msg) {
   try { await updateDoc(refP(), cambios); if (msg) toast(msg); }
-  catch (e) { console.error(e); toast('No se pudo guardar. Revisá la conexión.'); }
+  catch (e) {
+    console.error(e); const c = e && e.code || '';
+    toast(c === 'permission-denied' ? 'Sin permiso para guardar. Entrá de nuevo con el Gmail del consultorio.'
+      : c === 'invalid-argument' || /size|large|exceed/i.test(e && e.message || '') ? 'La imagen es muy pesada. Probá con otra foto.'
+      : c === 'unavailable' || c === 'deadline-exceeded' ? 'No se pudo guardar. Revisá la conexión.'
+      : 'No se pudo guardar (' + (c || 'error') + ').');
+    return false;
+  }
+  return true;
 }
 
 /* ---------- Pacientes (se arman a partir de los turnos + datos extra de la ficha) ---------- */
@@ -115,6 +123,7 @@ const PRO = {
       ${[1, 2, 3, 4, 5, 6, 0].map(d => { const h = hb.h[d]; return `<div class="hrow"><label class="chk" for="hd-${d}"><input type="checkbox" id="hd-${d}" data-c="hOn" data-d="${d}" ${h.on ? 'checked' : ''}>${DOWS[d]}</label>
         ${h.on ? `<select id="hdes-${d}" aria-label="${DOW[d]} desde" data-c="hDesde" data-d="${d}">${opcionesHora(h.desde, P)}</select><select id="hhas-${d}" aria-label="${DOW[d]} hasta" data-c="hHasta" data-d="${d}">${opcionesHora(h.hasta, P)}</select>` : `<span class="small muted" style="grid-column:span 2">No atiende</span>`}</div>`; }).join('')}
       <label for="dur">Duración de cada turno</label><select id="dur" data-c="dur">${[10, 15, 20, 30, 40, 60].map(m => `<option value="${m}"${hb.dur === m ? ' selected' : ''}>${m} minutos</option>`).join('')}</select>
+      <p class="small muted">Las familias ven: <b>${esc(textoHorarios({ horarios: hb.h, formatoHora: P.formatoHora })) || 'ningún día'}</b></p>
       ${errHtml()}<button class="btn pri block" data-a="guardarHorarios">${cambio ? 'Guardar horarios' : 'Horarios guardados'}</button>
       ${cambio ? `<button class="btn link" data-a="descartarHorarios">Descartar cambios</button>` : ''}</div>`;
   },
@@ -208,7 +217,7 @@ const val = id => (document.getElementById(id)?.value || '').trim();
 const motivosDe = P => (P.motivos || []).map(n => ({ n, i: (P.motivosIcono && P.motivosIcono[n]) || iconoAuto(n) }));
 function borradorMot() { if (!S.mot) S.mot = motivosDe(S.P); return S.mot; }
 function leerMot() { if (!S.mot) return; S.mot.forEach((x, i) => { const el = document.getElementById('mot-' + i); if (el) x.n = el.value.trim(); }); }
-function borradorHor() { if (!S.hor) S.hor = { h: JSON.parse(JSON.stringify(S.P.horarios)), dur: S.P.duracion }; return S.hor; }
+function borradorHor() { if (!S.hor) { S.hor = { h: JSON.parse(JSON.stringify(S.P.horarios)), dur: S.P.duracion }; S.horBase = JSON.stringify(S.hor.h); } return S.hor; }
 function leerBlq() { const b = S.blq; if (!b || !document.getElementById('b-desde')) return; b.desde = val('b-desde'); b.hasta = val('b-hasta'); if (document.getElementById('b-otro')) b.otro = val('b-otro'); }
 function borradorDar() { const d = S.dar; if (document.getElementById('d-nom')) { d.nombre = val('d-nom'); d.dni = soloNum(val('d-dni')); d.tel = val('d-tel'); d.motivo = val('d-mot'); d.obra = val('d-obra'); } }
 
@@ -306,7 +315,7 @@ const A = {
   guardarHorarios: async () => {
     const hb = borradorHor();
     for (const d of [1, 2, 3, 4, 5, 6, 0]) { const h = hb.h[d]; if (h.on && toMin(h.desde) >= toMin(h.hasta)) { S.err = 'El ' + DOW[d].toLowerCase() + ', la hora de "Hasta" tiene que ser después de "Desde".'; return render(); } }
-    S.err = ''; await guardarP({ horarios: hb.h, duracion: hb.dur }, 'Horarios guardados'); S.hor = null; render();
+    S.err = ''; if (await guardarP({ horarios: hb.h, duracion: hb.dur }, 'Horarios guardados')) S.hor = null; render();
   },
   descartarHorarios: () => { S.hor = null; S.err = ''; render(); },
   recEn: d => { const f = new Date(); f.setMonth(f.getMonth() + Number(d.m)); S.recF = f.getFullYear() + '-' + String(f.getMonth() + 1).padStart(2, '0') + '-' + String(f.getDate()).padStart(2, '0'); const t = val('r-t'); render(); const el = document.getElementById('r-t'); if (el) el.value = t; },
@@ -389,7 +398,7 @@ async function buscarConsultorio() {
     const r = await getDocs(query(collection(db, 'profesionales'), where('owners', 'array-contains', S.user.email.toLowerCase())));
     if (!r.empty) {
       S.slug = r.docs[0].id;
-      subs.push(onSnapshot(refP(), s => { S.P = s.data(); render(); }));
+      subs.push(onSnapshot(refP(), s => { S.P = s.data(); if (S.hor && JSON.stringify(S.hor.h) === S.horBase) S.hor = null; render(); }));
       subs.push(onSnapshot(collection(db, 'profesionales', S.slug, 'turnos'), s => { S.turnos = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, e => console.error(e)));
       subs.push(onSnapshot(collection(db, 'profesionales', S.slug, 'pacientes'), s => { S.pacx = Object.fromEntries(s.docs.map(d => [d.id, d.data()])); render(); }, e => console.error(e)));
     }

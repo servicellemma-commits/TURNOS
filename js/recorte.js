@@ -56,7 +56,7 @@ function armar(img, forma, nombre, alCerrar) {
     const f = SALIDA / CORTE, { w, h } = tam();
     x.fillStyle = '#ffffff'; x.fillRect(0, 0, SALIDA, SALIDA);
     x.drawImage(img, (CORTE / 2 - w / 2 + st.x) * f, (CORTE / 2 - h / 2 + st.y) * f, w * f, h * f);
-    return c.toDataURL('image/png');
+    return c.toDataURL('image/jpeg', 0.88);
   }
   function zoomA(z) { st.zoom = Math.min(4, Math.max(1, z)); dibujar(); }
 
