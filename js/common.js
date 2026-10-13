@@ -229,3 +229,35 @@ export const ESPECIALIDADES = {
   otra: { nombre: 'Otra especialidad', tipo: 'general', motivos: ['Primera consulta', 'Control', 'Consulta'],
     recs: [DOC, 'Si no podés venir, cancelá el turno para que lo use otra persona.', 'Traé tus estudios anteriores si los tenés.'] }
 };
+
+/* ---------- Hora y clima (hora del celular; clima de Open-Meteo, gratis y sin claves) ---------- */
+const clima = { ciudad: '', t: null, code: null, quando: 0, pidiendo: false };
+const iconoClima = c => c === 0 ? '☀️' : c <= 2 ? '🌤️' : c === 3 ? '☁️' : c <= 48 ? '🌫️' : c <= 67 ? '🌧️' : c <= 77 ? '❄️' : c <= 82 ? '🌦️' : '⛈️';
+export function horaAhora(P) { const n = new Date(), h = pad(n.getHours()) + ':' + pad(n.getMinutes()); return fmtHora(h, P); }
+export function textoClima(P) { return P && P.ciudad && clima.ciudad === P.ciudad && clima.t !== null ? iconoClima(clima.code) + ' ' + clima.t + '°' : ''; }
+export function relojHtml(P) { return `<span data-reloj>${horaAhora(P)}</span>`; }
+export function climaHtml(P) { return P && P.ciudad ? `<span data-clima>${textoClima(P)}</span>` : ''; }
+async function pedirClima(P) {
+  if (!P || !P.ciudad || clima.pidiendo) return;
+  if (clima.ciudad === P.ciudad && Date.now() - clima.quando < 30 * 60000) return;
+  clima.pidiendo = true;
+  try {
+    const g = await (await fetch('https://geocoding-api.open-meteo.com/v1/search?count=5&language=es&name=' + encodeURIComponent(P.ciudad))).json();
+    const l = (g.results || []).find(r => r.country_code === 'AR') || (g.results || [])[0];
+    if (l) {
+      const w = await (await fetch('https://api.open-meteo.com/v1/forecast?current=temperature_2m,weather_code&timezone=auto&latitude=' + l.latitude + '&longitude=' + l.longitude)).json();
+      if (w.current) { clima.ciudad = P.ciudad; clima.t = Math.round(w.current.temperature_2m); clima.code = w.current.weather_code; clima.quando = Date.now(); }
+    }
+  } catch (e) { /* sin clima: no pasa nada */ }
+  clima.pidiendo = false;
+}
+// Mantiene al día la hora y el clima que estén en pantalla. getP devuelve el profesional actual.
+export function iniciarReloj(getP) {
+  const tic = () => {
+    const P = getP(); document.querySelectorAll('[data-reloj]').forEach(e => { e.textContent = horaAhora(P); });
+    document.querySelectorAll('[data-clima]').forEach(e => { e.textContent = textoClima(P); });
+  };
+  const clim = async () => { await pedirClima(getP()); tic(); };
+  setInterval(tic, 15000); setInterval(clim, 10 * 60000); setTimeout(clim, 800);
+  return clim;
+}

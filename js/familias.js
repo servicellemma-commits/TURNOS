@@ -3,7 +3,7 @@ import { configurado, auth, db, onAuthStateChanged, signInAnonymously, Recaptcha
   doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js';
 import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js';
 import { textoUrgencia, fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
-  slotsFor, inicios, primerLibre, tramo, textoHorarios, textos, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js';
+  slotsFor, inicios, primerLibre, tramo, textoHorarios, textos, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js';
 
 const app = document.getElementById('app');
 const slug = (location.hash.replace('#', '') || new URLSearchParams(location.search).get('p') || PROFESIONAL_POR_DEFECTO).toLowerCase();
@@ -29,11 +29,13 @@ function carteles(P) {
   return avisosVigentes(P).map(b => `<p class="cartel"><b>${esc(b.motivo || 'Aviso')}:</b> ${esc(P.nombre)} no atiende ${esc(textoPeriodo(b))}. Esos días no hay turnos.</p>`).join('');
 }
 
+iniciarReloj(() => S.P);
 const V = {
   cartilla() {
     const P = S.P, hay = !!primerLibre(P, 1, ocupado), n = misActivos().length;
     return `<div class="card banded"><div class="band" style="min-height:120px">${deco(P)}${logoHtml(P)}<div class="txt"><h1>${esc(P.nombre)}</h1><p class="sub">${esc(P.especialidad)}${P.lugar ? ' · ' + esc(P.lugar) : ''}</p></div></div>
     <div class="pad">
+      ${P.relojPublico !== false && P.ciudad ? `<div class="franja-reloj"><span>Hoy ${esc(fechaLarga(ahora().HOY).toLowerCase())} · <b>${relojHtml(P)}</b></span><span>${climaHtml(P)}</span></div>` : ''}
       <div>${hay ? `<span class="pill ok">Turnos disponibles</span>` : `<span class="pill warn">Sin turnos en las próximas 2 semanas</span>`}</div>
       ${P.direccion || P.telefono ? `<p class="small">${esc(P.direccion)}${P.telefono ? `<br>Tel: <span class="wa">${esc(P.telefono)}</span>` : ''}</p>` : ''}
       <div class="hint"><b>Atiende</b><br>${esc(textoHorarios(P)) || 'Sin días cargados'}</div>

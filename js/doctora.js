@@ -3,7 +3,7 @@ import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider,
   doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js';
 import { ADMINS, PLATAFORMA } from './firebase-config.js';
 import { abrirRecorte } from './recorte.js';
-import { textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
+import { relojHtml, climaHtml, iniciarReloj, textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
   ICONOS, iconoSvg, iconoAuto, urgenciaDefecto, textoUrgencia,
   fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js';
@@ -55,7 +55,7 @@ function vista() {
   if (!S.P) return `<div class="card"><p class="muted">Cargando…</p></div>`;
   if (S.P.estado === 'pausado') return `<div class="card"><h2>Cuenta pausada</h2><p class="muted small">Tu página está pausada. Comunicate con el administrador para reactivarla.</p><button class="btn" data-a="salir">Salir</button></div>`;
   const P = S.P, tabs = [['agenda', 'Agenda'], ['dar', 'Dar turno'], ['pacientes', 'Pacientes'], ['bloqueos', 'Bloquear días']];
-  return `<div class="card banded"><div class="band band-app">${deco(P)}${logoHtml(P, true)}<div class="txt grow"><p class="sub">${esc(fechaLarga(ahora().HOY))}</p><h2>Hola, ${esc(nombreCorto(P.nombre.replace(/^(dra?\.?|dr\.?)\s+/i, '')))}</h2></div><button class="btn-redondo${S.tab === 'config' ? ' sel' : ''}" data-a="tab" data-t="config" aria-label="Configuración" title="Configuración"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 4.3c.4-1.8 3-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.5a1.7 1.7 0 0 0-1 2.5c.9 1.6-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1.1c-.4 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.6-1.1c-1.5.9-3.3-.8-2.4-2.4a1.7 1.7 0 0 0-1-2.5c-1.8-.5-1.8-3 0-3.5a1.7 1.7 0 0 0 1-2.5c-.9-1.6.9-3.3 2.4-2.4a1.7 1.7 0 0 0 2.6-1.1z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn sm" data-a="salir">Salir</button></div>
+  return `<div class="card banded"><div class="band band-app">${deco(P)}${logoHtml(P, true)}<div class="txt grow"><p class="sub">${esc(fechaLarga(ahora().HOY))}</p><h2>Hola, ${esc(nombreCorto(P.nombre.replace(/^(dra?\.?|dr\.?)\s+/i, '')))}</h2></div><div class="reloj"><b>${relojHtml(P)}</b>${P.ciudad ? `<span class="small">${climaHtml(P)} ${esc(P.ciudad)}</span>` : ''}</div><button class="btn-redondo${S.tab === 'config' ? ' sel' : ''}" data-a="tab" data-t="config" aria-label="Configuración" title="Configuración"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 4.3c.4-1.8 3-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.5a1.7 1.7 0 0 0-1 2.5c.9 1.6-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1.1c-.4 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.6-1.1c-1.5.9-3.3-.8-2.4-2.4a1.7 1.7 0 0 0-1-2.5c-1.8-.5-1.8-3 0-3.5a1.7 1.7 0 0 0 1-2.5c-.9-1.6.9-3.3 2.4-2.4a1.7 1.7 0 0 0 2.6-1.1z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn sm" data-a="salir">Salir</button></div>
     <div class="pad"><div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="chip${S.tab === k ? ' sel' : ''}" role="tab" aria-selected="${S.tab === k}" data-a="tab" data-t="${k}">${l}</button>`).join('')}</div></div></div>
     ${PRO[S.tab]()}`;
 }
@@ -160,6 +160,8 @@ const PRO = {
       <label for="c-tipo">Tipo de consultorio</label><select id="c-tipo">${Object.entries(TIPOS).map(([k, v]) => `<option value="${k}"${(P.tipo || 'pediatria') === k ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select>
       <label for="c-modelo">Cargar un modelo de especialidad</label><div class="row"><select id="c-modelo" class="grow">${Object.entries(ESPECIALIDADES).map(([k, v]) => `<option value="${k}">${esc(v.nombre)}</option>`).join('')}</select><button class="btn" data-a="cargarModelo">Cargar</button></div>
       <p class="small muted">Reemplaza tus motivos de consulta y tus recomendaciones por los del modelo. Después los podés editar.</p>
+      <label for="c-ciudad">Ciudad (para mostrar el clima)</label><input id="c-ciudad" value="${esc(P.ciudad || '')}" placeholder="Mendoza">
+      <label class="recordar" for="c-relojpub"><input type="checkbox" id="c-relojpub" ${P.relojPublico !== false ? 'checked' : ''}>Mostrar hora y clima también en la página de los pacientes</label>
       <label for="c-dir">Dirección</label><input id="c-dir" value="${esc(P.direccion)}"><label for="c-tel">Teléfono</label><input id="c-tel" value="${esc(P.telefono)}">
       <button class="btn pri block" data-a="guardarInfo">Guardar</button>`;
     else if (S.sec === 'avisos') c = `<h3>Avisos para las familias</h3>
@@ -368,7 +370,7 @@ const A = {
     S.mot = null; S.motSel = null;
     await guardarP({ especialidad: m.nombre === 'Otra especialidad' ? S.P.especialidad : m.nombre, tipo: m.tipo, motivos: m.motivos, motivosIcono: Object.fromEntries(m.motivos.map(x => [x, iconoAuto(x)])), recomendaciones: m.recs }, 'Modelo de ' + m.nombre + ' cargado');
   },
-  guardarInfo: () => guardarP({ nombre: val('c-nom') || S.P.nombre, especialidad: val('c-esp'), tipo: val('c-tipo') || 'pediatria', lugar: val('c-lug'), direccion: val('c-dir'), telefono: val('c-tel') }, 'Cambios guardados'),
+  guardarInfo: async () => { if (await guardarP({ nombre: val('c-nom') || S.P.nombre, especialidad: val('c-esp'), tipo: val('c-tipo') || 'pediatria', ciudad: val('c-ciudad'), relojPublico: !!document.getElementById('c-relojpub')?.checked, lugar: val('c-lug'), direccion: val('c-dir'), telefono: val('c-tel') }, 'Cambios guardados')) refrescarClima(); },
   guardarAvisos: () => guardarP({ aviso: val('c-aviso'), obraExterna: val('c-ext'), urgencia: (document.getElementById('c-urg')?.value || '').trim(), recomendaciones: (document.getElementById('c-recs')?.value || '').split('\n').map(x => x.trim()).filter(Boolean) }, 'Avisos guardados'),
   urgOriginal: () => { const t = document.getElementById('c-urg'); if (t) t.value = urgenciaDefecto(S.P); toast('Tocá Guardar para aplicarlo'); },
   guardarTurnos: () => { leerMot(); const lines = id => (document.getElementById(id).value || '').split('\n').map(s => s.trim()).filter(Boolean); guardarP({ obras: lines('c-obras'), limite: Number(val('c-lim')) || 1 }, 'Cambios guardados'); },
@@ -404,6 +406,7 @@ document.addEventListener('change', async e => {
 
 /* ---------- Conexión con los datos ---------- */
 let subs = [];
+const refrescarClima = iniciarReloj(() => S.P);
 async function buscarConsultorio() {
   subs.forEach(f => f()); subs = []; S.slug = null; S.P = null;
   try {
