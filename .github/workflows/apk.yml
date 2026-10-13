@@ -14,8 +14,6 @@ jobs:
         with: { distribution: temurin, java-version: '17' }
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: '8.4' }
-      - name: Llave de firma
-        run: echo "${{ secrets.KEYSTORE_B64 }}" | base64 -d > $RUNNER_TEMP/turnos.jks
       - name: Llave de firma (nueva en cada armado)
         run: |
           echo "KS_PASS=$(openssl rand -hex 12)" >> $GITHUB_ENV
