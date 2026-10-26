@@ -115,7 +115,9 @@ textarea{min-height:90px;resize:vertical}
 .card.banded{padding:0;overflow:hidden;gap:0}
 .card.banded>.pad{padding:16px;display:flex;flex-direction:column;gap:12px}
 .band{background:var(--head-bg);color:var(--head-fg);padding:16px;position:relative;overflow:hidden;min-height:84px;display:flex;align-items:center;gap:12px}
-.band .txt{position:relative;z-index:1;min-width:0;padding-right:84px}
+.band .txt{position:relative;z-index:1;min-width:0;padding-right:0}
+.band:has(.deco) .txt{padding-right:84px}
+.band .sub.lug{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .band h1,.band h2,.band h3{color:var(--head-fg)}
 .band .sub{color:var(--head-sub);font-size:13px}
 .band .sub.esp{font-weight:700;font-size:15px;margin:0}
