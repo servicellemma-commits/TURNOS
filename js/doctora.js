@@ -1,12 +1,12 @@
 // App de la profesional
 import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js?v=20261026e';
-import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026e';
-import { abrirRecorte } from './recorte.js?v=20261026e';
+  doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js?v=20261026f';
+import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026f';
+import { abrirRecorte } from './recorte.js?v=20261026f';
 import { tituloDatos, TITULO_DATOS, obraLogo, reducirImagen, FRASE_DEFECTO, TAMANOS_FRASE, fraseSinRegistro, relojHtml, climaHtml, iniciarReloj, textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
   ICONOS, iconoSvg, iconoAuto, urgenciaDefecto, textoUrgencia,
-  fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js?v=20261026e';
+  fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js?v=20261026f';
 
 const app = document.getElementById('app');
 const S = { user: null, cargando: true, slug: null, P: null, turnos: [], pacx: {}, tab: 'agenda', dia: ahora().HOY, dar: {}, ficha: null, copia: null, sec: 'apariencia', err: '', confirmar: null, buscar: '', hor: null, blq: null, afect: null, mot: null, motSel: null };
@@ -139,6 +139,8 @@ const PRO = {
       <div><p class="small muted" style="margin-bottom:6px">Motivo</p><div class="chips">${['Vacaciones', 'Congreso', 'Feriado', 'Otro'].map(m => `<button class="chip${b.motivo === m ? ' sel' : ''}" data-a="blqMotivo" data-m="${m}">${m}</button>`).join('')}</div></div>
       ${b.motivo === 'Otro' ? `<label for="b-otro">Escribí el motivo</label><input id="b-otro" value="${esc(b.otro)}" placeholder="Licencia, capacitación…">` : ''}
       <div class="row between"><span>Avisar en mi página</span><span class="row"><button class="btn sm" data-a="blqAviso" data-n="-1" aria-label="Menos días">−</button><b>${b.aviso}</b><button class="btn sm" data-a="blqAviso" data-n="1" aria-label="Más días">+</button><span class="small">días antes</span></span></div>
+      <div class="row between"><span>Mostrar solo el motivo, sin las fechas</span><button class="chip${b.solo ? ' sel' : ''}" data-a="blqSolo" aria-pressed="${b.solo ? 'true' : 'false'}">${b.solo ? 'Sí' : 'No'}</button></div>
+      <p class="small muted">Con "Sí", el cartel muestra solo el motivo. Sirve para escribir un mensaje propio en "Otro".</p>
       ${errHtml()}<button class="btn pri block" data-a="bloquear">Bloquear</button></div>
     <div class="card"><h3>Días bloqueados</h3>${l.length ? `<div class="list">${l.map(x => `<div class="item"><div class="grow"><b>${esc(x.motivo || 'Bloqueado')}</b><p class="small muted">${esc(textoPeriodo(x))}</p>${x.avisoDias ? `<p class="small muted">Se avisa en tu página desde el ${fechaCorta(sumarDias(desdeDe(x), -x.avisoDias))}</p>` : ''}</div><button class="btn sm" data-a="desbloquear" data-i="${x.i}">Quitar</button></div>`).join('')}</div>` : `<p class="muted small">No hay días bloqueados.</p>`}</div>`;
   },
@@ -357,6 +359,7 @@ const A = {
     catch (e) { console.error(e); toast('No se pudo borrar.'); }
   },
   blqMotivo: d => { leerBlq(); S.blq.motivo = d.m; render(); },
+  blqSolo: () => { leerBlq(); S.blq.solo = !S.blq.solo; render(); },
   blqAviso: d => { leerBlq(); S.blq.aviso = Math.max(0, Math.min(30, S.blq.aviso + Number(d.n))); render(); },
   cerrarAfect: () => { S.afect = null; render(); },
   bloquear: async () => {
@@ -367,7 +370,7 @@ const A = {
     const pis = (S.P.bloqueos || []).find(x => desdeDe(x) <= hasta && b.desde <= hastaDe(x));
     if (pis) { S.err = 'Esos días se superponen con otro bloqueo (' + textoPeriodo(pis) + ').'; return render(); }
     S.err = ''; S.afect = activos().filter(t => t.estado === 'activo' && t.fecha >= b.desde && t.fecha <= hasta).sort((a, c) => (a.fecha + a.hora).localeCompare(c.fecha + c.hora));
-    await guardarP({ bloqueos: [...(S.P.bloqueos || []), { desde: b.desde, hasta, motivo, avisoDias: b.aviso }] }, 'Días bloqueados');
+    await guardarP({ bloqueos: [...(S.P.bloqueos || []), { desde: b.desde, hasta, motivo, avisoDias: b.aviso, soloMotivo: !!b.solo }] }, 'Días bloqueados');
     S.blq = null; render(); top();
   },
   desbloquear: d => guardarP({ bloqueos: (S.P.bloqueos || []).filter((b, i) => i !== Number(d.i)) }, 'Días desbloqueados'),

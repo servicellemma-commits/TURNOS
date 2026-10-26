@@ -1,9 +1,9 @@
 // Página pública: lo que ven las familias
 import { configurado, auth, db, onAuthStateChanged, signInAnonymously, RecaptchaVerifier, linkWithPhoneNumber,
-  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026e';
-import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026e';
+  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026f';
+import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026f';
 import { textoUrgencia, fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
-  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, tituloDatos, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026e';
+  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, tituloDatos, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026f';
 
 const app = document.getElementById('app');
 const slug = (location.hash.replace('#', '') || new URLSearchParams(location.search).get('p') || PROFESIONAL_POR_DEFECTO).toLowerCase();
@@ -36,7 +36,7 @@ const pasoAct = () => pasos()[S.res.paso - 1];
 const cuantos = () => S.res.cuenta ? Math.max(S.res.hijos.length, 1) : 1;
 
 function carteles(P) {
-  return avisosVigentes(P).map(b => `<p class="cartel"><b>${esc(b.motivo || 'Aviso')}:</b> ${esc(P.nombre)} no atiende ${esc(textoPeriodo(b))}. Esos días no hay turnos.</p>`).join('');
+  return avisosVigentes(P).map(b => b.soloMotivo ? `<p class="cartel"><b>${esc(b.motivo || 'Aviso')}</b></p>` : `<p class="cartel"><b>${esc(b.motivo || 'Aviso')}:</b> ${esc(P.nombre)} no atiende ${esc(textoPeriodo(b))}. Esos días no hay turnos.</p>`).join('');
 }
 
 iniciarReloj(() => S.P);
