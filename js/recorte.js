@@ -1,6 +1,6 @@
 // Ventana para acomodar el logo: mover con el dedo, agrandar/achicar, centrar y elegir forma.
 // Devuelve { logo (PNG 256x256), forma: 'redondo' | 'cuadrado' } o null si se cancela.
-import { esc } from './common.js?v=20261026g';
+import { esc } from './common.js?v=20261026h';
 
 const LADO = 260, CORTE = 210, SALIDA = 256;
 

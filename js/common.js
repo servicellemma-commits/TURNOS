@@ -67,7 +67,7 @@ export function fmtHora(h, P) {
   const m = toMin(h), hh = Math.floor(m / 60) % 24, mm = m % 60;
   return ((hh % 12) || 12) + ':' + pad(mm) + ' ' + (hh < 12 ? 'AM' : 'PM');
 }
-export const conH = (h, P) => P && P.formatoHora === '12' ? fmtHora(h, P) : h + ' h';
+export const conH = (h, P) => P && P.formatoHora === '12' ? fmtHora(h, P) : h + ' hs';
 export function opcionesHora(sel, P) {
   let o = ''; for (let m = 6 * 60; m <= 23 * 60 + 55; m += 5) { const h = fromMin(m); o += `<option value="${h}"${h === sel ? ' selected' : ''}>${fmtHora(h, P)}</option>`; }
   return o;
@@ -105,12 +105,17 @@ const daisy = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})"><g f
 const cat = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})"><path d="M-10 -4 L-8 -16 L-2 -9 Z M10 -4 L8 -16 L2 -9 Z" fill="#afa9ec"/><circle r="11" fill="#afa9ec"/><circle cx="-4" cy="-1" r="1.6" fill="#26215c"/><circle cx="4" cy="-1" r="1.6" fill="#26215c"/><path d="M-1.5 3 L0 4.2 L1.5 3" stroke="#26215c" stroke-width="1" fill="none"/><path d="M-16 2 H-8 M-16 5 H-8 M8 2 H16 M8 5 H16" stroke="#534ab7" stroke-width=".8"/></g>`;
 const paw = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})" fill="#cecbf6"><ellipse rx="5" ry="4" cy="3"/><circle cx="-5" cy="-4" r="2"/><circle cx="-1.7" cy="-6.5" r="2"/><circle cx="1.7" cy="-6.5" r="2"/><circle cx="5" cy="-4" r="2"/></g>`;
 const leaf = (x, y, r, s) => `<path d="M0 0 C6 -9 16 -9 22 0 C16 9 6 9 0 0Z M0 0 L22 0" fill="#9fe1cb" stroke="#1d9e75" stroke-width=".8" transform="translate(${x},${y}) rotate(${r}) scale(${s})"/>`;
+const dotsB = () => `<circle cx="112" cy="20" r="14" fill="#fff" opacity=".16"/><circle cx="86" cy="58" r="9" fill="#fff" opacity=".12"/><circle cx="130" cy="64" r="6" fill="#fff" opacity=".1"/>`;
 const dots = () => `<circle cx="112" cy="20" r="14" fill="#b5d4f4"/><circle cx="86" cy="58" r="9" fill="#85b7eb" opacity=".6"/><circle cx="130" cy="64" r="6" fill="#378add" opacity=".4"/>`;
 export const TEMAS = {
   flores: { nombre: 'Flores', accent: '#c94f7c', head: '#fbeaf0', fg: '#72243e', sub: '#993556', deco: () => daisy(110, 24, 1.25) + daisy(72, 58, .8) + daisy(128, 66, .55) + daisy(40, 18, .45) },
   gatitos: { nombre: 'Gatitos', accent: '#6b5fc7', head: '#eeedfe', fg: '#3c3489', sub: '#534ab7', deco: () => cat(108, 40, 1.3) + cat(66, 62, .7) + paw(36, 22, .7) + paw(132, 74, .5) },
   clasico: { nombre: 'Clásico', accent: '#2f6fd6', head: '#e6f1fb', fg: '#0c447c', sub: '#185fa5', deco: dots },
   menta: { nombre: 'Menta', accent: '#15876a', head: '#e1f5ee', fg: '#085041', sub: '#0f6e56', deco: () => leaf(84, 30, -30, 1.4) + leaf(104, 60, 20, 1.1) + leaf(60, 64, -60, .8) + leaf(120, 14, 40, .7) },
+  marino: { nombre: 'Azul marino', accent: '#2563a8', head: '#17365d', fg: '#ffffff', sub: '#c3d4ea', btn: '#17365d', deco: dotsB },
+  petroleo: { nombre: 'Verde petróleo', accent: '#0f7c8f', head: '#0f4c5c', fg: '#ffffff', sub: '#bfe0e6', btn: '#0f4c5c', deco: dotsB },
+  bosque: { nombre: 'Verde bosque', accent: '#2e6b4f', head: '#e3ebe6', fg: '#1c3d2f', sub: '#3f6b57', deco: () => leaf(84, 30, -30, 1.2) + leaf(106, 58, 20, 1) },
+  bordo: { nombre: 'Bordó', accent: '#8c2f45', head: '#f1e6e8', fg: '#4a1624', sub: '#7a3a4a', deco: dots },
   oceano: { nombre: 'Océano', accent: '#1f78b4', head: '#dff0fb', fg: '#0b3a5c', sub: '#1d5f8f', deco: () => `<path d="M0 70 q12-10 24 0 t24 0 t24 0 t24 0 t24 0 t24 0" fill="none" stroke="#1f78b4" stroke-width="3"/><path d="M0 78 q12-10 24 0 t24 0 t24 0 t24 0 t24 0 t24 0" fill="none" stroke="#7fb8de" stroke-width="3"/><path d="M96 56 l0-34 l22 28z" fill="#fff" stroke="#1f78b4" stroke-width="2"/><path d="M90 58 h36 l-6 10 h-24z" fill="#1f78b4"/>` },
   autitos: { nombre: 'Autitos', accent: '#d9482b', head: '#fdebe5', fg: '#6b1f10', sub: '#a63a22', deco: () => `<rect x="60" y="40" width="64" height="20" rx="8" fill="#d9482b"/><path d="M72 40 l8-14 h28 l8 14z" fill="#f08a73"/><circle cx="78" cy="62" r="8" fill="#333"/><circle cx="108" cy="62" r="8" fill="#333"/><path d="M0 76 h140" stroke="#999" stroke-width="3" stroke-dasharray="10 8"/>` },
   espacio: { nombre: 'Espacio', accent: '#5b4fd1', head: '#e8e6fb', fg: '#231a6b', sub: '#4338b0', deco: () => `<circle cx="100" cy="36" r="16" fill="#5b4fd1"/><ellipse cx="100" cy="36" rx="26" ry="6" fill="none" stroke="#a9a1f0" stroke-width="3"/><path d="M40 20 l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="#f5b700"/><path d="M118 70 l2 5 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z" fill="#f5b700"/>` },
@@ -119,7 +124,7 @@ export const TEMAS = {
 export const decoSvg = (t, cls) => `<svg class="${cls || 'deco'}" viewBox="0 0 140 84" preserveAspectRatio="xMaxYMin meet" aria-hidden="true">${(TEMAS[t] || TEMAS.clasico).deco()}</svg>`;
 export function aplicarTema(P) {
   const t = TEMAS[P.tema] || TEMAS.clasico, r = document.documentElement.style;
-  r.setProperty('--accent', P.colorPropio || t.accent); r.setProperty('--head-bg', t.head); r.setProperty('--head-fg', t.fg); r.setProperty('--head-sub', t.sub);
+  r.setProperty('--accent', P.colorPropio || t.accent); r.setProperty('--head-bg', t.head); r.setProperty('--head-fg', t.fg); r.setProperty('--head-sub', t.sub); r.setProperty('--head-btn', t.btn || t.fg);
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', t.head);
 }
 export const deco = P => P.dibujos ? decoSvg(P.tema) : '';
