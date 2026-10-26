@@ -32,11 +32,14 @@ export const uid = () => Math.random().toString(36).slice(2, 10);
 
 /* ---------- Agenda ---------- */
 // ocupado(fecha, hora) -> devuelve el turno (o true) si está tomado
+// Minutos entre pacientes de ese día: el propio del día o, si no tiene, el general
+export const pasoDe = (P, fecha) => { const h = (P.horarios || {})[parseKey(fecha).getDay()]; return (h && Number(h.dur)) || P.duracion || 20; };
 export function slotsFor(P, fecha, ocupado, pasados) {
   const t = ahora(), d = parseKey(fecha), h = P.horarios[d.getDay()];
   if (!h || !h.on || bloqueoDe(P, fecha)) return [];
   const out = [];
-  for (let m = toMin(h.desde); m + P.duracion <= toMin(h.hasta); m += P.duracion) {
+  const paso = pasoDe(P, fecha);
+  for (let m = toMin(h.desde); m + paso <= toMin(h.hasta); m += paso) {
     if (!pasados && fecha === t.HOY && m <= t.min) continue;
     const hora = fromMin(m);
     out.push({ hora, t: ocupado(fecha, hora) || null });
@@ -44,13 +47,13 @@ export function slotsFor(P, fecha, ocupado, pasados) {
   return out;
 }
 export function inicios(P, fecha, n, ocupado) {
-  const sl = slotsFor(P, fecha, ocupado), d = P.duracion;
+  const sl = slotsFor(P, fecha, ocupado), d = pasoDe(P, fecha);
   return sl.filter((s, i) => { for (let j = 0; j < n; j++) { const x = sl[i + j]; if (!x || x.t) return false; if (j && toMin(x.hora) - toMin(sl[i + j - 1].hora) !== d) return false; } return true; }).map(s => s.hora);
 }
 export function primerLibre(P, n, ocupado) { for (const k of proximos(14)) { const h = inicios(P, k, n, ocupado); if (h.length) return { fecha: k, hora: h[0] }; } return null; }
 export function tramo(P, fecha, hora, n, ocupado) {
   const sl = slotsFor(P, fecha, ocupado), i = sl.findIndex(s => s.hora === hora), tr = sl.slice(i, i + n);
-  return i >= 0 && tr.length === n && tr.every((s, j) => !s.t && (j === 0 || toMin(s.hora) - toMin(tr[j - 1].hora) === P.duracion)) ? tr.map(s => s.hora) : null;
+  return i >= 0 && tr.length === n && tr.every((s, j) => !s.t && (j === 0 || toMin(s.hora) - toMin(tr[j - 1].hora) === pasoDe(P, fecha))) ? tr.map(s => s.hora) : null;
 }
 export function textoHorarios(P) {
   const h = P.horarios;

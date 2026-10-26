@@ -3,7 +3,7 @@ import { configurado, auth, db, onAuthStateChanged, signInAnonymously, Recaptcha
   doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js';
 import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js';
 import { textoUrgencia, fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
-  slotsFor, inicios, primerLibre, tramo, obraLogo, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js';
+  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js';
 
 const app = document.getElementById('app');
 const slug = (location.hash.replace('#', '') || new URLSearchParams(location.search).get('p') || PROFESIONAL_POR_DEFECTO).toLowerCase();
@@ -136,7 +136,7 @@ const V = {
     const P = S.P, t0 = S.ultima[0], tN = S.ultima[S.ultima.length - 1];
     const maps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(P.direccion || P.lugar || '');
     const fx = (f, h) => f.replace(/-/g, '') + 'T' + h.replace(':', '') + '00';
-    const fin = fromMin(toMin(tN.hora) + P.duracion);
+    const fin = fromMin(toMin(tN.hora) + pasoDe(P, tN.fecha));
     const quien = S.ultima.map(t => nombreCorto(t.paciente.nombre)).join(' y ');
     const cal = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('Turno ' + String(P.especialidad || '').toLowerCase() + ': ' + quien) + '&dates=' + fx(t0.fecha, t0.hora) + '/' + fx(tN.fecha, fin) + '&ctz=America/Argentina/Mendoza&location=' + encodeURIComponent(P.direccion || '') + '&details=' + encodeURIComponent(P.nombre + ' · ' + t0.motivo);
     return `${cabecera()}<div class="card"><h2>¡Listo, ${S.ultima.length > 1 ? 'turnos reservados' : 'turno reservado'}!</h2>

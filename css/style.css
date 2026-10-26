@@ -101,7 +101,7 @@ textarea{min-height:90px;resize:vertical}
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .stat{background:var(--surface-2);border-radius:10px;padding:10px 12px}
 .stat b{display:block;font:600 26px var(--display);font-variant-numeric:tabular-nums}
-.hrow{display:grid;grid-template-columns:96px minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center}
+.hrow{display:grid;grid-template-columns:78px minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr);gap:6px;align-items:center}
 .hrow .chk{display:flex;flex-direction:row;align-items:center;gap:6px;color:var(--fg);font-size:14px}
 .hrow input[type=checkbox]{width:18px;height:18px}
 .sep{height:1px;background:var(--line)}
@@ -163,7 +163,7 @@ textarea{min-height:90px;resize:vertical}
 .band-app .txt{padding-right:0}
 .band-app h2{font-size:19px}
 /* Horarios, recordatorios y avisos de vacaciones */
-.hrow select{width:100%;padding:8px 6px;font-size:14px}
+.hrow select{width:100%;padding:8px 4px;font-size:13px}
 .hrow.cab{margin-bottom:-6px}
 .chip.formato{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px}
 .chip.formato b{font-size:17px}

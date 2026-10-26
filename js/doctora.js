@@ -120,10 +120,10 @@ const PRO = {
     const P = S.P, hb = borradorHor(), cambio = JSON.stringify(hb.h) !== JSON.stringify(P.horarios) || hb.dur !== P.duracion;
     return `<div class="card"><h3>Formato de hora</h3><div class="grid2"><button class="chip formato${P.formatoHora !== '12' ? ' sel' : ''}" data-a="formato" data-f="24"><b>16:30</b><span class="small">24 horas</span></button><button class="chip formato${P.formatoHora === '12' ? ' sel' : ''}" data-a="formato" data-f="12"><b>4:30 PM</b><span class="small">AM / PM</span></button></div></div>
     <div class="card"><h3>Días y horarios de atención</h3><p class="small muted">Cambiá lo que quieras y tocá <b>Guardar horarios</b> al final.</p>
-      <div class="hrow cab"><span></span><span class="small muted">Desde</span><span class="small muted">Hasta</span></div>
+      <div class="hrow cab"><span></span><span class="small muted">Desde</span><span class="small muted">Hasta</span><span class="small muted">Cada</span></div>
       ${[1, 2, 3, 4, 5, 6, 0].map(d => { const h = hb.h[d]; return `<div class="hrow"><label class="chk" for="hd-${d}"><input type="checkbox" id="hd-${d}" data-c="hOn" data-d="${d}" ${h.on ? 'checked' : ''}>${DOWS[d]}</label>
-        ${h.on ? `<select id="hdes-${d}" aria-label="${DOW[d]} desde" data-c="hDesde" data-d="${d}">${opcionesHora(h.desde, P)}</select><select id="hhas-${d}" aria-label="${DOW[d]} hasta" data-c="hHasta" data-d="${d}">${opcionesHora(h.hasta, P)}</select>` : `<span class="small muted" style="grid-column:span 2">No atiende</span>`}</div>`; }).join('')}
-      <label for="dur">Duración de cada turno</label><select id="dur" data-c="dur">${[10, 15, 20, 30, 40, 60].map(m => `<option value="${m}"${hb.dur === m ? ' selected' : ''}>${m} minutos</option>`).join('')}</select>
+        ${h.on ? `<select id="hdes-${d}" aria-label="${DOW[d]} desde" data-c="hDesde" data-d="${d}">${opcionesHora(h.desde, P)}</select><select id="hhas-${d}" aria-label="${DOW[d]} hasta" data-c="hHasta" data-d="${d}">${opcionesHora(h.hasta, P)}</select><select id="hdur-${d}" aria-label="${DOW[d]}: minutos por paciente" data-c="hDur" data-d="${d}">${MINUTOS.map(m => `<option value="${m}"${(h.dur || hb.dur) === m ? ' selected' : ''}>${m} min</option>`).join('')}</select>` : `<span class="small muted" style="grid-column:span 3">No atiende</span>`}</div>`; }).join('')}
+      <label for="dur">Minutos por paciente para los días nuevos</label><select id="dur" data-c="dur">${MINUTOS.map(m => `<option value="${m}"${hb.dur === m ? ' selected' : ''}>${m} minutos</option>`).join('')}</select>
       <p class="small muted">Las familias ven: <b>${esc(textoHorarios({ horarios: hb.h, formatoHora: P.formatoHora })) || 'ningún día'}</b></p>
       ${errHtml()}<button class="btn pri block" data-a="guardarHorarios">${cambio ? 'Guardar horarios' : 'Horarios guardados'}</button>
       ${cambio ? `<button class="btn link" data-a="descartarHorarios">Descartar cambios</button>` : ''}</div>`;
@@ -230,6 +230,7 @@ const val = id => (document.getElementById(id)?.value || '').trim();
 const motivosDe = P => (P.motivos || []).map(n => ({ n, i: (P.motivosIcono && P.motivosIcono[n]) || iconoAuto(n) }));
 function borradorMot() { if (!S.mot) S.mot = motivosDe(S.P); return S.mot; }
 function leerMot() { if (!S.mot) return; S.mot.forEach((x, i) => { const el = document.getElementById('mot-' + i); if (el) x.n = el.value.trim(); }); }
+const MINUTOS = [10, 15, 20, 30, 40, 60];
 function borradorHor() { if (!S.hor) { S.hor = { h: JSON.parse(JSON.stringify(S.P.horarios)), dur: S.P.duracion }; S.horBase = JSON.stringify(S.hor.h); } return S.hor; }
 function leerBlq() { const b = S.blq; if (!b || !document.getElementById('b-desde')) return; b.desde = val('b-desde'); b.hasta = val('b-hasta'); if (document.getElementById('b-otro')) b.otro = val('b-otro'); }
 function borradorDar() { const d = S.dar; if (document.getElementById('d-nom')) { d.nombre = val('d-nom'); d.dni = soloNum(val('d-dni')); d.tel = val('d-tel'); d.motivo = val('d-mot'); d.obra = val('d-obra'); } }
@@ -328,6 +329,7 @@ const A = {
   guardarHorarios: async () => {
     const hb = borradorHor();
     for (const d of [1, 2, 3, 4, 5, 6, 0]) { const h = hb.h[d]; if (h.on && toMin(h.desde) >= toMin(h.hasta)) { S.err = 'El ' + DOW[d].toLowerCase() + ', la hora de "Hasta" tiene que ser después de "Desde".'; return render(); } }
+    for (const d of [1, 2, 3, 4, 5, 6, 0]) if (hb.h[d].on) hb.h[d].dur = Number(hb.h[d].dur) || hb.dur;
     S.err = ''; if (await guardarP({ horarios: hb.h, duracion: hb.dur }, 'Horarios guardados')) S.hor = null; render();
   },
   descartarHorarios: () => { S.hor = null; S.err = ''; render(); },
@@ -412,9 +414,10 @@ document.addEventListener('click', e => { const el = e.target.closest('[data-a]'
 document.addEventListener('input', e => { if (e.target.id === 'buscar') { S.buscar = e.target.value; render(); } });
 document.addEventListener('change', async e => {
   const el = e.target, c = el.dataset && el.dataset.c; if (!c || !S.P) return; const P = S.P;
-  if (c === 'hOn' || c === 'hDesde' || c === 'hHasta' || c === 'dur') {
+  if (c === 'hOn' || c === 'hDesde' || c === 'hHasta' || c === 'hDur' || c === 'dur') {
     const hb = borradorHor(), d = el.dataset.d;
-    if (c === 'hOn') hb.h[d].on = el.checked;
+    if (c === 'hOn') { hb.h[d].on = el.checked; if (el.checked && !hb.h[d].dur) hb.h[d].dur = hb.dur; }
+    else if (c === 'hDur') hb.h[d].dur = Number(el.value);
     else if (c === 'dur') hb.dur = Number(el.value);
     else hb.h[d][c === 'hDesde' ? 'desde' : 'hasta'] = el.value;
     S.err = ''; return render();
