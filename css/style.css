@@ -162,6 +162,11 @@ textarea{min-height:90px;resize:vertical}
 .btn.borde-rojo{border-color:var(--danger)}
 .btn.rojo{background:var(--danger);border-color:var(--danger);color:#fff}
 .borrar{background:var(--danger-bg);color:var(--danger);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.band-app{flex-direction:column;align-items:stretch;gap:10px}
+.band-app .ba-top{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+.band-app .ba-bot{display:flex;justify-content:space-between;align-items:baseline;gap:8px;position:relative;z-index:1}
+.band-app .ba-bot .sub{font-size:14px;white-space:nowrap}
+.band-app .reloj{flex-direction:row;align-items:baseline;gap:8px}
 .band-app .txt{padding-right:0}
 .band-app h2{font-size:19px}
 /* Horarios, recordatorios y avisos de vacaciones */

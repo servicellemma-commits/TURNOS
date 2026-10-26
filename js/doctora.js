@@ -1,12 +1,12 @@
 // App de la profesional
 import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js?v=20261026i';
-import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026i';
-import { abrirRecorte } from './recorte.js?v=20261026i';
+  doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js?v=20261026j';
+import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026j';
+import { abrirRecorte } from './recorte.js?v=20261026j';
 import { tituloDatos, TITULO_DATOS, obraLogo, reducirImagen, FRASE_DEFECTO, TAMANOS_FRASE, fraseSinRegistro, relojHtml, climaHtml, iniciarReloj, textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
   ICONOS, iconoSvg, iconoAuto, urgenciaDefecto, textoUrgencia,
-  fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js?v=20261026i';
+  fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js?v=20261026j';
 
 const app = document.getElementById('app');
 const S = { user: null, cargando: true, slug: null, P: null, turnos: [], pacx: {}, tab: 'agenda', dia: ahora().HOY, dar: {}, ficha: null, copia: null, sec: 'apariencia', err: '', confirmar: null, buscar: '', hor: null, blq: null, afect: null, mot: null, motSel: null };
@@ -55,7 +55,7 @@ function vista() {
   if (!S.P) return `<div class="card"><p class="muted">Cargando…</p></div>`;
   if (S.P.estado === 'pausado') return `<div class="card"><h2>Cuenta pausada</h2><p class="muted small">Tu página está pausada. Comunicate con el administrador para reactivarla.</p><button class="btn" data-a="salir">Salir</button></div>`;
   const P = S.P, tabs = [['agenda', 'Agenda'], ['dar', 'Dar turno'], ['pacientes', 'Pacientes'], ['bloqueos', 'Bloquear días']];
-  return `<div class="card banded"><div class="band band-app">${deco(P)}${logoHtml(P, true)}<div class="txt grow"><p class="sub">${esc(fechaLarga(ahora().HOY))}</p><h2>Hola, ${esc(nombreCorto(P.nombre.replace(/^(dra?\.?|dr\.?)\s+/i, '')))}</h2></div><div class="reloj"><b>${relojHtml(P)}</b>${P.ciudad ? `<span class="small">${climaHtml(P)} ${esc(P.ciudad)}</span>` : ''}</div><button class="btn-redondo${S.tab === 'config' ? ' sel' : ''}" data-a="tab" data-t="config" aria-label="Configuración" title="Configuración"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 4.3c.4-1.8 3-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.5a1.7 1.7 0 0 0-1 2.5c.9 1.6-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1.1c-.4 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.6-1.1c-1.5.9-3.3-.8-2.4-2.4a1.7 1.7 0 0 0-1-2.5c-1.8-.5-1.8-3 0-3.5a1.7 1.7 0 0 0 1-2.5c-.9-1.6.9-3.3 2.4-2.4a1.7 1.7 0 0 0 2.6-1.1z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn sm" data-a="salir">Salir</button></div>
+  return `<div class="card banded"><div class="band band-app">${deco(P)}<div class="ba-top">${logoHtml(P, true)}<div class="txt grow"><h2>Hola, ${esc(nombreCorto(P.nombre.replace(/^(dra?\.?|dr\.?)\s+/i, '')))}</h2></div><button class="btn-redondo${S.tab === 'config' ? ' sel' : ''}" data-a="tab" data-t="config" aria-label="Configuración" title="Configuración"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 4.3c.4-1.8 3-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.5a1.7 1.7 0 0 0-1 2.5c.9 1.6-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1.1c-.4 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.6-1.1c-1.5.9-3.3-.8-2.4-2.4a1.7 1.7 0 0 0-1-2.5c-1.8-.5-1.8-3 0-3.5a1.7 1.7 0 0 0 1-2.5c-.9-1.6.9-3.3 2.4-2.4a1.7 1.7 0 0 0 2.6-1.1z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn sm" data-a="salir">Salir</button></div><div class="ba-bot"><span class="sub">${esc(fechaLarga(ahora().HOY))}</span><div class="reloj"><b>${relojHtml(P)}</b>${P.ciudad ? `<span class="small">${climaHtml(P)} ${esc(P.ciudad)}</span>` : ''}</div></div></div>
     <div class="pad"><div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="chip${S.tab === k ? ' sel' : ''}" role="tab" aria-selected="${S.tab === k}" data-a="tab" data-t="${k}">${l}</button>`).join('')}</div></div></div>
     ${PRO[S.tab]()}`;
 }

@@ -9,7 +9,7 @@ import {
   getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where,
   onSnapshot, writeBatch, serverTimestamp, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js?v=20261026i";
+import { firebaseConfig } from "./firebase-config.js?v=20261026j";
 
 export const configurado = !String(firebaseConfig.apiKey || "").startsWith("PEGAR");
 export const app = configurado ? initializeApp(firebaseConfig) : null;
