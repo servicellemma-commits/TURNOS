@@ -1,9 +1,9 @@
 // Página pública: lo que ven las familias
 import { configurado, auth, db, onAuthStateChanged, signInAnonymously, RecaptchaVerifier, linkWithPhoneNumber,
-  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026h';
-import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026h';
+  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026i';
+import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026i';
 import { textoUrgencia, fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
-  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, tituloDatos, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026h';
+  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, tituloDatos, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026i';
 
 const app = document.getElementById('app');
 const slug = (location.hash.replace('#', '') || new URLSearchParams(location.search).get('p') || PROFESIONAL_POR_DEFECTO).toLowerCase();

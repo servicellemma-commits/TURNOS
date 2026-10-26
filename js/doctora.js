@@ -1,12 +1,12 @@
 // App de la profesional
 import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js?v=20261026h';
-import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026h';
-import { abrirRecorte } from './recorte.js?v=20261026h';
+  doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js?v=20261026i';
+import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026i';
+import { abrirRecorte } from './recorte.js?v=20261026i';
 import { tituloDatos, TITULO_DATOS, obraLogo, reducirImagen, FRASE_DEFECTO, TAMANOS_FRASE, fraseSinRegistro, relojHtml, climaHtml, iniciarReloj, textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
   ICONOS, iconoSvg, iconoAuto, urgenciaDefecto, textoUrgencia,
-  fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js?v=20261026h';
+  fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js?v=20261026i';
 
 const app = document.getElementById('app');
 const S = { user: null, cargando: true, slug: null, P: null, turnos: [], pacx: {}, tab: 'agenda', dia: ahora().HOY, dar: {}, ficha: null, copia: null, sec: 'apariencia', err: '', confirmar: null, buscar: '', hor: null, blq: null, afect: null, mot: null, motSel: null };
@@ -146,7 +146,7 @@ const PRO = {
   },
 
   config() {
-    const P = S.P, secs = [['apariencia', 'Apariencia'], ['info', 'Mi información'], ['horarios', 'Horarios'], ['avisos', 'Avisos'], ['turnos', 'Turnos']];
+    const P = S.P, secs = [['apariencia', 'Apariencia'], ['info', 'Mi información'], ['horarios', 'Horarios'], ['avisos', 'Avisos'], ['turnos', 'Turnos'], ['copia', 'Copia']];
     let c = '';
     if (S.sec === 'apariencia') c = `<h3>Elegí tu tema</h3><div class="temas">${Object.entries(TEMAS).map(([k, t]) => `<button class="tema${P.tema === k ? ' sel' : ''}" data-a="tema" data-t="${k}" aria-pressed="${P.tema === k}"><div class="mini" style="background:${t.head}">${decoSvg(k, 'x')}</div><div class="nm"><span class="dot" style="background:${t.accent}"></span>${t.nombre}</div></button>`).join('')}</div>
       <label class="switch" for="c-dib">Dibujitos en el encabezado<input type="checkbox" id="c-dib" data-c="dibujos" ${P.dibujos ? 'checked' : ''}></label>
@@ -199,6 +199,11 @@ const PRO = {
       <div class="list">${(P.obras || []).map((o, i) => `<div class="item obra-fila">${obraLogo(P, o)}<div class="grow"><b>${esc(o)}</b></div><button class="btn sm" data-a="obraLogo" data-i="${i}">${P.obrasLogos && P.obrasLogos[o] ? 'Cambiar' : 'Poner logo'}</button>${P.obrasLogos && P.obrasLogos[o] ? `<button class="btn sm danger" data-a="obraLogoQuitar" data-i="${i}" aria-label="Quitar logo de ${esc(o)}">✕</button>` : ''}</div>`).join('') || '<p class="item muted">Todavía no cargaste obras sociales.</p>'}</div>
       <label for="c-lim">Turnos pendientes por paciente</label><select id="c-lim">${[1, 2, 3].map(n => `<option value="${n}"${P.limite === n ? ' selected' : ''}>${n}</option>`).join('')}</select>
       <button class="btn pri block" data-a="guardarTurnos">Guardar</button>`; }
+    if (S.sec === 'copia') c = `<h3>Copia de seguridad</h3>
+      <p class="small muted">Baja un archivo Excel con todos tus pacientes (con sus notas) y todos tus turnos. Guardalo en un lugar privado, porque tiene datos de salud. Te conviene hacerlo una vez por semana.</p>
+      <p class="small">Ahora tenés <b>${pacientes().length}</b> paciente${pacientes().length === 1 ? '' : 's'} y <b>${S.turnos.length}</b> turno${S.turnos.length === 1 ? '' : 's'}.</p>
+      <button class="btn pri block" data-a="copia">Descargar copia (Excel)</button>
+      <p class="small muted">Si Excel no se puede preparar, se baja en formato CSV.</p>`;
     if (S.sec === 'horarios') return `<div class="card"><h2>Configuración</h2><div class="secs">${secs.map(([k, l]) => `<button class="chip${S.sec === k ? ' sel' : ''}" data-a="sec" data-s="${k}">${l}</button>`).join('')}</div></div>${PRO.horarios()}`;
     return `<div class="card"><h2>Configuración</h2><div class="secs">${secs.map(([k, l]) => `<button class="chip${S.sec === k ? ' sel' : ''}" data-a="sec" data-s="${k}">${l}</button>`).join('')}</div></div><div class="card">${c}</div>`;
   }
@@ -359,6 +364,29 @@ const A = {
     catch (e) { console.error(e); toast('No se pudo borrar.'); }
   },
   blqMotivo: d => { leerBlq(); S.blq.motivo = d.m; render(); },
+  copia: async () => {
+    const pac = pacientes();
+    const hP = ['Nombre', 'DNI', 'Nacimiento', 'Obra social', 'N.º de afiliado', 'Responsable', 'Contacto', 'Notas'];
+    const fP = pac.map(x => [x.nombre, x.dni, x.nac, x.obra, x.afiliado, x.resp, x.contacto, (x.notas || []).map(n => n.fecha + ': ' + n.texto).join(' | ')]);
+    const hT = ['Fecha', 'Hora', 'Paciente', 'DNI', 'Obra social', 'Motivo', 'Estado', 'Responsable', 'Contacto', 'Origen'];
+    const fT = [...S.turnos].sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora)).map(t => [t.fecha, t.hora, t.paciente?.nombre || '', t.paciente?.dni || '', t.paciente?.obra || '', t.motivo || '', t.estado || '', t.responsable?.nombre || '', t.responsable?.contacto || '', t.origen || '']);
+    const nombre = 'copia-' + S.slug + '-' + ahora().HOY;
+    const bajar = (blob, ext) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nombre + ext; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
+    try {
+      if (!window.XLSX) await new Promise((ok, mal) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; sc.onload = ok; sc.onerror = mal; document.head.appendChild(sc); });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hP, ...fP]), 'Pacientes');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hT, ...fT]), 'Turnos');
+      const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      bajar(new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), '.xlsx');
+      toast('Copia descargada');
+    } catch (e) {
+      console.error(e);
+      const csv = f => f.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
+      bajar(new Blob(['\ufeff' + 'PACIENTES\r\n' + csv([hP, ...fP]) + '\r\n\r\nTURNOS\r\n' + csv([hT, ...fT])], { type: 'text/csv;charset=utf-8' }), '.csv');
+      toast('Copia descargada en CSV');
+    }
+  },
   blqSolo: () => { leerBlq(); S.blq.solo = !S.blq.solo; render(); },
   blqAviso: d => { leerBlq(); S.blq.aviso = Math.max(0, Math.min(30, S.blq.aviso + Number(d.n))); render(); },
   cerrarAfect: () => { S.afect = null; render(); },
