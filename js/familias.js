@@ -1,9 +1,9 @@
 // Página pública: lo que ven las familias
 import { configurado, auth, db, onAuthStateChanged, signInAnonymously, RecaptchaVerifier, linkWithPhoneNumber,
-  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026f';
-import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026f';
+  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026g';
+import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026g';
 import { textoUrgencia, fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
-  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, tituloDatos, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026f';
+  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, tituloDatos, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026g';
 
 const app = document.getElementById('app');
 const slug = (location.hash.replace('#', '') || new URLSearchParams(location.search).get('p') || PROFESIONAL_POR_DEFECTO).toLowerCase();
@@ -27,7 +27,7 @@ const limiteMsg = n => nombreCorto(n) + ' ya tiene ' + (S.P.limite === 1 ? 'un t
 const errHtml = () => S.err ? `<p class="err" role="alert">${esc(S.err)}</p>` : '';
 const top = () => window.scrollTo(0, 0);
 
-function cabecera(extra) { const P = S.P; return `<div class="card banded"><div class="band">${deco(P)}${logoHtml(P, true)}<div class="txt grow"><h3>${esc(P.nombre)}</h3><p class="sub">${esc(P.especialidad)}${P.lugar ? ' · ' + esc(P.lugar) : ''}</p></div>${extra || ''}</div></div>`; }
+function cabecera(extra) { const P = S.P; return `<div class="card banded"><div class="band">${deco(P)}${logoHtml(P, true)}<div class="txt grow"><h3>${esc(P.nombre)}</h3><p class="sub esp">${esc(P.especialidad)}</p>${P.lugar ? `<p class="sub lug">${esc(P.lugar)}</p>` : ''}</div>${extra || ''}</div></div>`; }
 
 const PASOS_CUENTA = ['hijos', 'motivo', 'dia', 'revisar'], PASOS_RAPIDO = ['motivo', 'dia', 'datos'];
 const NOMBRE_PASO = { hijos: 'Para quién', motivo: 'Motivo', dia: 'Día y hora', revisar: 'Revisar', datos: 'Último paso' };
@@ -43,7 +43,7 @@ iniciarReloj(() => S.P);
 const V = {
   cartilla() {
     const P = S.P, hay = !!primerLibre(P, 1, ocupado), n = misActivos().length;
-    return `<div class="card banded"><div class="band" style="min-height:120px">${deco(P)}${logoHtml(P)}<div class="txt"><h1>${esc(P.nombre)}</h1><p class="sub">${esc(P.especialidad)}${P.lugar ? ' · ' + esc(P.lugar) : ''}</p></div></div>
+    return `<div class="card banded"><div class="band" style="min-height:120px">${deco(P)}${logoHtml(P)}<div class="txt"><h1>${esc(P.nombre)}</h1><p class="sub esp">${esc(P.especialidad)}</p>${P.lugar ? `<p class="sub lug">${esc(P.lugar)}</p>` : ''}</div></div>
     <div class="pad">
       ${P.relojPublico !== false && P.ciudad ? `<div class="franja-reloj"><span>Hoy ${esc(fechaLarga(ahora().HOY).toLowerCase())} · <b>${relojHtml(P)}</b></span><span>${climaHtml(P)}</span></div>` : ''}
       <div>${hay ? `<span class="pill ok">Turnos disponibles</span>` : `<span class="pill warn">Sin turnos en las próximas 2 semanas</span>`}</div>

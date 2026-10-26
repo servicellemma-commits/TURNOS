@@ -118,6 +118,8 @@ textarea{min-height:90px;resize:vertical}
 .band .txt{position:relative;z-index:1;min-width:0;padding-right:84px}
 .band h1,.band h2,.band h3{color:var(--head-fg)}
 .band .sub{color:var(--head-sub);font-size:13px}
+.band .sub.esp{font-weight:700;font-size:15px;margin:0}
+.band .sub.lug{font-size:13px;opacity:.85;margin:2px 0 0}
 .band .deco{position:absolute;right:0;top:0;width:140px;height:84px;pointer-events:none}
 .band .logo{background:#ffffffb3;color:var(--head-fg)}
 .band .btn{background:#ffffffcc;border-color:transparent;color:var(--head-fg);position:relative;z-index:1}
