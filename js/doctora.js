@@ -1,12 +1,12 @@
 // App de la profesional
 import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js?v=20261026b';
-import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026b';
-import { abrirRecorte } from './recorte.js?v=20261026b';
+  doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js?v=20261026c';
+import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026c';
+import { abrirRecorte } from './recorte.js?v=20261026c';
 import { obraLogo, reducirImagen, FRASE_DEFECTO, TAMANOS_FRASE, fraseSinRegistro, relojHtml, climaHtml, iniciarReloj, textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
   ICONOS, iconoSvg, iconoAuto, urgenciaDefecto, textoUrgencia,
-  fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js?v=20261026b';
+  fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js?v=20261026c';
 
 const app = document.getElementById('app');
 const S = { user: null, cargando: true, slug: null, P: null, turnos: [], pacx: {}, tab: 'agenda', dia: ahora().HOY, dar: {}, ficha: null, copia: null, sec: 'apariencia', err: '', confirmar: null, buscar: '', hor: null, blq: null, afect: null, mot: null, motSel: null };

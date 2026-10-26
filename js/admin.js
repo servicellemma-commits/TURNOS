@@ -1,8 +1,8 @@
 // Panel del administrador: dar de alta profesionales, pausarlos y llevar los cobros
 import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
-  doc, setDoc, updateDoc, collection, getDocs } from './fb.js?v=20261026b';
-import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026b';
-import { esc, toast, sinConfig, configNueva, ESPECIALIDADES, ahora, parseKey, keyOf, fechaCorta } from './common.js?v=20261026b';
+  doc, setDoc, updateDoc, collection, getDocs } from './fb.js?v=20261026c';
+import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026c';
+import { esc, toast, sinConfig, configNueva, ESPECIALIDADES, ahora, parseKey, keyOf, fechaCorta } from './common.js?v=20261026c';
 
 const app = document.getElementById('app');
 const S = { user: null, cargando: true, lista: [], err: '', abierto: null };
