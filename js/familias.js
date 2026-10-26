@@ -1,9 +1,9 @@
 // Página pública: lo que ven las familias
 import { configurado, auth, db, onAuthStateChanged, signInAnonymously, RecaptchaVerifier, linkWithPhoneNumber,
-  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026d';
-import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026d';
+  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026e';
+import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026e';
 import { textoUrgencia, fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
-  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, tituloDatos, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026d';
+  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, tituloDatos, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026e';
 
 const app = document.getElementById('app');
 const slug = (location.hash.replace('#', '') || new URLSearchParams(location.search).get('p') || PROFESIONAL_POR_DEFECTO).toLowerCase();
@@ -30,7 +30,7 @@ const top = () => window.scrollTo(0, 0);
 function cabecera(extra) { const P = S.P; return `<div class="card banded"><div class="band">${deco(P)}${logoHtml(P, true)}<div class="txt grow"><h3>${esc(P.nombre)}</h3><p class="sub">${esc(P.especialidad)}${P.lugar ? ' · ' + esc(P.lugar) : ''}</p></div>${extra || ''}</div></div>`; }
 
 const PASOS_CUENTA = ['hijos', 'motivo', 'dia', 'revisar'], PASOS_RAPIDO = ['motivo', 'dia', 'datos'];
-const NOMBRE_PASO = { hijos: 'Para quién', motivo: 'Motivo', dia: 'Día y hora', revisar: 'Revisar', datos: 'Tus datos' };
+const NOMBRE_PASO = { hijos: 'Para quién', motivo: 'Motivo', dia: 'Día y hora', revisar: 'Revisar', datos: 'Último paso' };
 const pasos = () => S.res.cuenta ? PASOS_CUENTA : PASOS_RAPIDO;
 const pasoAct = () => pasos()[S.res.paso - 1];
 const cuantos = () => S.res.cuenta ? Math.max(S.res.hijos.length, 1) : 1;
@@ -83,7 +83,7 @@ const V = {
   reservar() {
     const X = textos(S.P);
     const P = S.P, r = S.res, ps = pasos(), act = pasoAct(), n = cuantos(), t = ahora();
-    const bar = `<div class="steps"><div class="row between"><span>Paso ${r.paso} de ${ps.length}</span><span>${NOMBRE_PASO[act]}</span></div><div class="bar"><i style="width:${r.paso / ps.length * 100}%"></i></div></div>`;
+    const bar = `<div class="steps"><div class="row between"><span>Paso ${r.paso} de ${ps.length}</span><span>${esc(act === 'datos' ? (P.etiquetaPaso === undefined ? NOMBRE_PASO.datos : P.etiquetaPaso) : NOMBRE_PASO[act])}</span></div><div class="bar"><i style="width:${r.paso / ps.length * 100}%"></i></div></div>`;
     let c = '';
     if (act === 'hijos') {
       c = `<h2>¿Para quién es el turno?</h2><p class="small muted">${X.quienSub}</p>
