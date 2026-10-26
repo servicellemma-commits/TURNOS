@@ -1,12 +1,12 @@
 // App de la profesional
 import { configurado, auth, db, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js?v=20261026a';
-import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026a';
-import { abrirRecorte } from './recorte.js?v=20261026a';
+  doc, setDoc, updateDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp, getDocs } from './fb.js?v=20261026b';
+import { ADMINS, PLATAFORMA } from './firebase-config.js?v=20261026b';
+import { abrirRecorte } from './recorte.js?v=20261026b';
 import { obraLogo, reducirImagen, FRASE_DEFECTO, TAMANOS_FRASE, fraseSinRegistro, relojHtml, climaHtml, iniciarReloj, textoHorarios, textos, TIPOS, ESPECIALIDADES, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, fechaCorta, proximos, edad, parseKey, toMin, DOW, DOWS,
   slotsFor, aplicarTema, deco, decoSvg, logoHtml, TEMAS, toast, sinConfig, configNueva,
   ICONOS, iconoSvg, iconoAuto, urgenciaDefecto, textoUrgencia,
-  fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js?v=20261026a';
+  fmtHora, conH, opcionesHora, bloqueoDe, desdeDe, hastaDe, textoPeriodo, sumarDias, uid } from './common.js?v=20261026b';
 
 const app = document.getElementById('app');
 const S = { user: null, cargando: true, slug: null, P: null, turnos: [], pacx: {}, tab: 'agenda', dia: ahora().HOY, dar: {}, ficha: null, copia: null, sec: 'apariencia', err: '', confirmar: null, buscar: '', hor: null, blq: null, afect: null, mot: null, motSel: null };
@@ -171,6 +171,8 @@ const PRO = {
       <label for="c-frase">Frase debajo del botón "Sacar turno"</label><input id="c-frase" value="${esc(fraseSinRegistro(P))}" placeholder="${esc(FRASE_DEFECTO)}">
       <label for="c-frase-tam">Tamaño de la frase</label><select id="c-frase-tam">${Object.entries(TAMANOS_FRASE).map(([k, v]) => `<option value="${k}"${(P.fraseTam || 'medio') === k ? ' selected' : ''}>${v[0]}</option>`).join('')}</select>
       <p class="small muted">Si dejás la frase vacía, no se muestra.</p>
+      <label for="c-tmot">Pregunta sobre el motivo del turno</label><input id="c-tmot" value="${esc(P.tituloMotivo === undefined ? textos(P).motivo : P.tituloMotivo)}" placeholder="${esc(textos(P).motivo)}">
+      <p class="small muted">Es lo que se lee arriba de las opciones (Control, Enfermedad…). Si la dejás vacía, no se muestra.</p>
       <label for="c-recs">Recomendaciones antes del turno (una por línea)</label><textarea id="c-recs" style="min-height:90px">${esc((P.recomendaciones || []).join('\n'))}</textarea>
       <p class="small muted">Se ven al confirmar el turno. Si lo dejás vacío, se muestra el aviso de siempre.</p>
       <label for="c-urg">Mensaje de urgencias (se ve al elegir el motivo)</label><textarea id="c-urg" style="min-height:80px">${esc(textoUrgencia(P))}</textarea>
@@ -378,7 +380,7 @@ const A = {
     await guardarP({ especialidad: m.nombre === 'Otra especialidad' ? S.P.especialidad : m.nombre, tipo: m.tipo, motivos: m.motivos, motivosIcono: Object.fromEntries(m.motivos.map(x => [x, iconoAuto(x)])), recomendaciones: m.recs }, 'Modelo de ' + m.nombre + ' cargado');
   },
   guardarInfo: async () => { if (await guardarP({ nombre: val('c-nom') || S.P.nombre, especialidad: val('c-esp'), tipo: val('c-tipo') || 'pediatria', ciudad: val('c-ciudad'), relojPublico: !!document.getElementById('c-relojpub')?.checked, lugar: val('c-lug'), direccion: val('c-dir'), telefono: val('c-tel') }, 'Cambios guardados')) refrescarClima(); },
-  guardarAvisos: () => guardarP({ frase: val('c-frase'), fraseTam: val('c-frase-tam') || 'medio', aviso: val('c-aviso'), obraExterna: val('c-ext'), urgencia: (document.getElementById('c-urg')?.value || '').trim(), recomendaciones: (document.getElementById('c-recs')?.value || '').split('\n').map(x => x.trim()).filter(Boolean) }, 'Avisos guardados'),
+  guardarAvisos: () => guardarP({ tituloMotivo: val('c-tmot'), frase: val('c-frase'), fraseTam: val('c-frase-tam') || 'medio', aviso: val('c-aviso'), obraExterna: val('c-ext'), urgencia: (document.getElementById('c-urg')?.value || '').trim(), recomendaciones: (document.getElementById('c-recs')?.value || '').split('\n').map(x => x.trim()).filter(Boolean) }, 'Avisos guardados'),
   urgOriginal: () => { const t = document.getElementById('c-urg'); if (t) t.value = urgenciaDefecto(S.P); toast('Tocá Guardar para aplicarlo'); },
   obraLogo: d => {
     const o = (S.P.obras || [])[Number(d.i)]; if (!o) return;

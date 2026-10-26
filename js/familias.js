@@ -1,9 +1,9 @@
 // Página pública: lo que ven las familias
 import { configurado, auth, db, onAuthStateChanged, signInAnonymously, RecaptchaVerifier, linkWithPhoneNumber,
-  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026a';
-import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026a';
+  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026b';
+import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026b';
 import { textoUrgencia, fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
-  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026a';
+  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026b';
 
 const app = document.getElementById('app');
 const slug = (location.hash.replace('#', '') || new URLSearchParams(location.search).get('p') || PROFESIONAL_POR_DEFECTO).toLowerCase();
@@ -90,7 +90,7 @@ const V = {
       <div class="kids">${hijosFam().map(h => { const s = r.hijos.includes(h.id); return `<button class="kid${s ? ' sel' : ''}" data-a="togHijo" data-id="${h.id}" aria-pressed="${s}"><span class="logo" aria-hidden="true">${esc(h.nombre[0] || '?')}</span>${esc(nombreCorto(h.nombre))}<small>${esc(edad(h.nac))}</small></button>`; }).join('')}</div>
       <button class="btn link" data-a="ir" data-p="hijo">${X.agregarOtro}</button>`;
     } else if (act === 'motivo') {
-      c = `<h2>${X.motivo}</h2>
+      c = `${(P.tituloMotivo === undefined ? X.motivo : P.tituloMotivo) ? `<h2>${esc(P.tituloMotivo === undefined ? X.motivo : P.tituloMotivo)}</h2>` : ''}
       <div class="tiles">${(P.motivos || []).map(m => `<button class="tile${r.motivo === m ? ' sel' : ''}" data-a="motivo" data-m="${esc(m)}" aria-pressed="${r.motivo === m}">${icono(m, P)}${esc(m)}</button>`).join('')}</div>
       ${textoUrgencia(P) ? `<p class="alerta" role="note">${esc(textoUrgencia(P))}</p>` : ''}`;
     } else if (act === 'dia') {
