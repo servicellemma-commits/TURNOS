@@ -289,3 +289,6 @@ export function reducirImagen(src, px) {
     }; i.src = src;
   });
 }
+
+export const TITULO_DATOS = 'Completá los datos del turno';
+export const tituloDatos = P => P.tituloDatos === undefined ? TITULO_DATOS : P.tituloDatos;

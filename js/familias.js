@@ -1,9 +1,9 @@
 // Página pública: lo que ven las familias
 import { configurado, auth, db, onAuthStateChanged, signInAnonymously, RecaptchaVerifier, linkWithPhoneNumber,
-  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026c';
-import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026c';
+  doc, setDoc, collection, query, where, onSnapshot, writeBatch, serverTimestamp } from './fb.js?v=20261026d';
+import { PROFESIONAL_POR_DEFECTO, VERIFICAR_SMS, PLATAFORMA } from './firebase-config.js?v=20261026d';
 import { textoUrgencia, fmtHora, conH, avisosVigentes, textoPeriodo, bloqueoDe, esc, soloNum, nombreCorto, ocupadoId, ahora, fechaLarga, diaNombre, proximos, edad, parseKey, toMin, fromMin, DOWS, MES,
-  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026c';
+  slotsFor, inicios, primerLibre, tramo, obraLogo, pasoDe, tituloDatos, textoHorarios, textos, fraseSinRegistro, tamanoFrase, relojHtml, climaHtml, iniciarReloj, aplicarTema, deco, logoHtml, icono, toast, sinConfig, uid } from './common.js?v=20261026d';
 
 const app = document.getElementById('app');
 const slug = (location.hash.replace('#', '') || new URLSearchParams(location.search).get('p') || PROFESIONAL_POR_DEFECTO).toLowerCase();
@@ -108,7 +108,7 @@ const V = {
       ${(P.recomendaciones || []).length ? `<ul class="small muted" style="margin:0;padding-left:18px">${P.recomendaciones.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<p class="small muted">Llegá 10 minutos antes con el DNI y la credencial de la obra social.</p>'}`;
     } else {
       const g = r.g;
-      c = `<h2>¿A nombre de quién?</h2>
+      c = `${tituloDatos(P) ? `<h2>${esc(tituloDatos(P))}</h2>` : ''}
       <div class="hint"><b>${esc(fechaLarga(r.fecha))}, ${conH(r.hora, P)}</b> · ${esc(r.motivo)}</div>
       <label for="g-chico">${X.nombre}</label><input id="g-chico" value="${esc(g.chico)}">
       <div class="grid2"><div><label for="g-dni">${X.dni}</label><input id="g-dni" inputmode="numeric" value="${esc(g.dni)}"></div><div><label for="g-nac">Nacimiento</label><input id="g-nac" type="date" max="${t.HOY}" value="${esc(g.nac)}"></div></div>
